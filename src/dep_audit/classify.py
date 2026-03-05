@@ -70,7 +70,10 @@ def classify_package(
             result.replacement = map_entry.get("module", "")
             result.stdlib_since = since
             result.confidence = 0.60 if map_entry.get("partial") else 0.95
-            result.flags = [f"stdlib_backport: {result.replacement} available since {ecosystem.capitalize()} {since}"]
+            from dep_audit import ecosystems
+
+            eco_label = ecosystems.display_name(ecosystem)
+            result.flags = [f"stdlib_backport: {result.replacement} available since {eco_label} {since}"]
             return result
 
     # Last resort: ask deps.dev if the maintainer marked it deprecated

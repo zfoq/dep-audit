@@ -7,48 +7,62 @@ Every response is cached to disk to avoid hammering the API on repeated runs.
 from __future__ import annotations
 
 import json
+import logging
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any
 
 from dep_audit import cache
 
+logger = logging.getLogger("dep_audit")
+
 _BASE = "https://api.deps.dev/v3"
 
-# deps.dev calls ecosystems "systems" — map our names to theirs
-_SYSTEM_MAP = {
-    "python": "pypi",
-    "npm": "npm",
-    "cargo": "cargo",
-    "maven": "maven",
-}
+
+def system_name(ecosystem: str) -> str:
+    """Map our ecosystem name to deps.dev's system name."""
+    from dep_audit import ecosystems
+
+    eco = ecosystems.get_or_none(ecosystem)
+    return eco.system_name if eco else ecosystem
 
 
-def _system(ecosystem: str) -> str:
-    return _SYSTEM_MAP.get(ecosystem, ecosystem)
+_MAX_RETRIES = 3
+_RETRY_BACKOFF = (1.0, 3.0, 10.0)
 
 
-def _fetch(url: str, cache_key: str, ttl: int = cache._TTL_METADATA) -> dict | None:
-    """Fetch URL with caching. Returns parsed JSON or None on failure."""
+def _fetch(url: str, cache_key: str, ttl: int = cache.TTL_METADATA) -> dict | None:
+    """Fetch URL with caching. Returns parsed JSON or None on failure.
+
+    Retries with exponential backoff on HTTP 429 (rate limit).
+    """
     cached = cache.get("depsdev", cache_key, ttl=ttl)
     if cached is not None:
         return cached
 
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            data = json.loads(resp.read().decode())
-        cache.put("depsdev", cache_key, data)
-        return data
-    except (urllib.error.URLError, OSError, json.JSONDecodeError):
-        # Network down, timeout, bad JSON — all treated the same: unavailable
-        return None
+    for attempt in range(_MAX_RETRIES):
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode())
+            cache.put("depsdev", cache_key, data)
+            return data
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt < _MAX_RETRIES - 1:
+                delay = _RETRY_BACKOFF[attempt]
+                logger.debug("Rate limited by deps.dev, retrying in %.0fs...", delay)
+                time.sleep(delay)
+                continue
+            return None
+        except (urllib.error.URLError, OSError, json.JSONDecodeError):
+            return None
+    return None
 
 
 def get_package(ecosystem: str, name: str) -> dict | None:
     """Get package info (versions list)."""
-    sys = _system(ecosystem)
+    sys = system_name(ecosystem)
     encoded = urllib.parse.quote(name, safe="")
     url = f"{_BASE}/systems/{sys}/packages/{encoded}"
     return _fetch(url, f"{sys}-{name}-pkg")
@@ -56,7 +70,7 @@ def get_package(ecosystem: str, name: str) -> dict | None:
 
 def get_version(ecosystem: str, name: str, version: str) -> dict | None:
     """Get version-specific metadata."""
-    sys = _system(ecosystem)
+    sys = system_name(ecosystem)
     encoded_name = urllib.parse.quote(name, safe="")
     encoded_ver = urllib.parse.quote(version, safe="")
     url = f"{_BASE}/systems/{sys}/packages/{encoded_name}/versions/{encoded_ver}"
@@ -65,7 +79,7 @@ def get_version(ecosystem: str, name: str, version: str) -> dict | None:
 
 def get_dependencies(ecosystem: str, name: str, version: str) -> dict | None:
     """Get dependency tree for a specific version."""
-    sys = _system(ecosystem)
+    sys = system_name(ecosystem)
     encoded_name = urllib.parse.quote(name, safe="")
     encoded_ver = urllib.parse.quote(version, safe="")
     url = f"{_BASE}/systems/{sys}/packages/{encoded_name}/versions/{encoded_ver}:dependencies"
@@ -83,7 +97,7 @@ def get_advisory(advisory_key: str) -> dict | None:
     """Get advisory details."""
     encoded = urllib.parse.quote(advisory_key, safe="")
     url = f"{_BASE}/advisories/{encoded}"
-    return _fetch(url, f"advisory-{advisory_key}", ttl=cache._TTL_ADVISORY)
+    return _fetch(url, f"advisory-{advisory_key}", ttl=cache.TTL_ADVISORY)
 
 
 def is_deprecated(ecosystem: str, name: str, version: str) -> tuple[bool, str]:
@@ -96,58 +110,11 @@ def is_deprecated(ecosystem: str, name: str, version: str) -> tuple[bool, str]:
     msg = ""
     if deprecated:
         for link in data.get("links", []):
-            label = link.get("label", "").lower()
-            if "deprecat" in label:
-                msg = link.get("url", "")
+            label = link.get("label", "")
+            if "deprecat" in label.lower():
+                # Prefer label (human-readable message) over URL
+                msg = label or link.get("url", "")
                 break
     return deprecated, msg
 
 
-def get_scorecard_maintained(project_key: str) -> int | None:
-    """Get Scorecard 'Maintained' score (0-10) for a project. Returns None if unavailable."""
-    data = get_project(project_key)
-    if data is None:
-        return None
-    scorecard = data.get("scorecard", {})
-    for check in scorecard.get("checks", []):
-        if check.get("name") == "Maintained":
-            return check.get("score", 0)
-    return None
-
-
-def get_dependents_count(ecosystem: str, name: str) -> dict[str, int]:
-    """Get dependent counts. Returns {'direct': N, 'indirect': N}."""
-    sys = _system(ecosystem)
-    encoded = urllib.parse.quote(name, safe="")
-    url = f"{_BASE}/systems/{sys}/packages/{encoded}/dependents"
-    # The dependents endpoint might not exist in v3; we fetch what we can
-    data = _fetch(url, f"{sys}-{name}-depnts")
-    if data is None:
-        return {"direct": 0, "indirect": 0}
-    return {
-        "direct": data.get("directCount", 0),
-        "indirect": data.get("indirectCount", 0),
-    }
-
-
-def enrich_package(ecosystem: str, name: str, version: str) -> dict[str, Any]:
-    """Fetch all available metadata for a package version. Returns a combined dict."""
-    result: dict[str, Any] = {
-        "name": name,
-        "version": version,
-        "ecosystem": ecosystem,
-    }
-
-    ver_data = get_version(ecosystem, name, version)
-    if ver_data:
-        result["is_deprecated"] = ver_data.get("isDeprecated", False)
-        result["licenses"] = list(ver_data.get("licenses", []))
-        result["advisory_keys"] = [a.get("id", "") for a in ver_data.get("advisoryKeys", [])]
-        result["published_at"] = ver_data.get("publishedAt", "")
-        result["links"] = ver_data.get("links", [])
-
-    deps_count = get_dependents_count(ecosystem, name)
-    result["dependents_direct"] = deps_count["direct"]
-    result["dependents_indirect"] = deps_count["indirect"]
-
-    return result

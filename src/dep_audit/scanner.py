@@ -7,28 +7,20 @@ trace anchors for transitive junk, then format the report.
 
 from __future__ import annotations
 
-import sys
-from dataclasses import dataclass, field
+import logging
 from pathlib import Path
 
+from dep_audit import ecosystems
 from dep_audit.anchors import AnchorResult, trace_anchors
-from dep_audit.classify import Classification, classify_all
-from dep_audit.lockfiles import LockfileResult, detect_ecosystem, parse
+from dep_audit.classify import classify_all
+from dep_audit.lockfiles import LockfileResult, parse
 from dep_audit.report import anchor_report, json_report, terminal_report
-from dep_audit.usage import UsageReport, scan_python_imports
+from dep_audit.types import ScanResult
 
+logger = logging.getLogger("dep_audit")
 
-@dataclass
-class ScanResult:
-    project_name: str
-    ecosystem: str
-    target_version: str
-    lockfile_result: LockfileResult
-    classifications: list[Classification] = field(default_factory=list)
-    usage: dict[str, UsageReport] = field(default_factory=dict)
-    anchors: dict[str, AnchorResult] = field(default_factory=dict)
-    dependency_tree: dict[str, list[str]] = field(default_factory=dict)
-    is_remote: bool = False
+# Re-export so existing `from dep_audit.scanner import ScanResult` keeps working
+__all__ = ["ScanResult", "scan", "scan_remote", "format_report"]
 
 
 def scan(
@@ -42,13 +34,13 @@ def scan(
     project_root = project_root.resolve()
     project_name = project_root.name
 
-    ecosystems = [ecosystem] if ecosystem else detect_ecosystem(project_root)
-    if not ecosystems:
+    eco_list = [ecosystem] if ecosystem else ecosystems.detect_ecosystem(project_root)
+    if not eco_list:
         return []
 
     results: list[ScanResult] = []
-    for eco in ecosystems:
-        tv = target_version or _default_target_version(eco)
+    for eco in eco_list:
+        tv = target_version or ecosystems.resolve_target_version(eco)
         result = _scan_ecosystem(project_root, project_name, eco, tv, include_dev, offline)
         results.append(result)
 
@@ -79,7 +71,7 @@ def _scan_ecosystem(
 
     # 1b. Resolve transitive deps if we only have a partial source
     if not offline and not _has_full_lockfile(lockfile_result.source_file):
-        print("  Resolving transitive dependencies via deps.dev...", file=sys.stderr)
+        logger.info("  Resolving transitive dependencies via deps.dev...")
         lockfile_result = _resolve_transitive_deps(lockfile_result, ecosystem)
         result.lockfile_result = lockfile_result
 
@@ -102,18 +94,21 @@ def _scan_ecosystem(
     scan_names = direct_names | flagged_names
 
     # 5. Scan source code
-    if ecosystem == "python":
-        result.usage = scan_python_imports(project_root, scan_names)
-    # npm/cargo scanning would go here in Phase 2+
+    eco_config = ecosystems.get_or_none(ecosystem)
+    if eco_config and eco_config.scan_imports:
+        result.usage = eco_config.scan_imports(project_root, scan_names)
 
-    # 6. Trace anchors for flagged transitive packages
+    # 6. Trace anchors for flagged packages
+    from dep_audit.anchors import classify_anchor
+    from dep_audit.db import load_junk_db
+
     flagged_transitive = [
         c.name for c in result.classifications
         if c.classification != "ok" and not c.is_direct
     ]
+    junk_db = load_junk_db(ecosystem)
+
     if flagged_transitive:
-        from dep_audit.db import load_junk_db
-        junk_db = load_junk_db(ecosystem)
         result.anchors = trace_anchors(
             result.dependency_tree,
             flagged_transitive,
@@ -124,18 +119,13 @@ def _scan_ecosystem(
 
     # Also add anchor entries for flagged direct deps
     for c in result.classifications:
-        if c.classification != "ok" and c.is_direct:
-            u = result.usage.get(c.name, UsageReport())
-            if c.name not in result.anchors:
-                verdict = "UNUSED" if u.import_count == 0 else (
-                    "REPLACEABLE" if c.classification in ("stdlib_backport", "zombie_shim") else
-                    "JUSTIFIED"
-                )
-                result.anchors[c.name] = AnchorResult(
-                    anchor_name=c.name,
-                    anchor_verdict=verdict,
-                    chain=[c.name],
-                )
+        if c.classification != "ok" and c.is_direct and c.name not in result.anchors:
+            verdict = classify_anchor(c.name, junk_db, result.usage)
+            result.anchors[c.name] = AnchorResult(
+                anchor_name=c.name,
+                anchor_verdict=verdict,
+                chain=[c.name],
+            )
 
     return result
 
@@ -164,21 +154,21 @@ def scan_remote(
 
     project_name = f"{repo.owner}/{repo.repo}"
 
-    ecosystems = [ecosystem] if ecosystem else detect_remote_ecosystem(repo)
-    if not ecosystems:
+    eco_list = [ecosystem] if ecosystem else detect_remote_ecosystem(repo)
+    if not eco_list:
         return []
 
     results: list[ScanResult] = []
-    for eco in ecosystems:
-        tv = target_version or _default_target_version(eco)
+    for eco in eco_list:
+        tv = target_version or ecosystems.resolve_target_version(eco)
 
-        print(f"  Fetching lockfiles from {project_name} ({repo.ref})...", file=sys.stderr)
+        logger.info("  Fetching lockfiles from %s (%s)...", project_name, repo.ref)
         bundle = fetch_lockfile_bundle(repo, eco)
         if not bundle:
-            print(f"  No {eco} lockfiles found.", file=sys.stderr)
+            logger.warning("  No %s lockfiles found.", eco)
             continue
 
-        print(f"  Found: {', '.join(bundle.keys())}", file=sys.stderr)
+        logger.info("  Found: %s", ", ".join(bundle.keys()))
 
         lockfile_result = parse_from_content(eco, bundle, include_dev)
 
@@ -196,7 +186,7 @@ def scan_remote(
 
         # Resolve transitive deps if we only have a partial source
         if not offline and not _has_full_lockfile(lockfile_result.source_file):
-            print("  Resolving transitive dependencies via deps.dev...", file=sys.stderr)
+            logger.info("  Resolving transitive dependencies via deps.dev...")
             lockfile_result = _resolve_transitive_deps(lockfile_result, eco)
             result.lockfile_result = lockfile_result
 
@@ -220,38 +210,20 @@ def scan_remote(
 
 def format_report(result: ScanResult, fmt: str = "terminal") -> str:
     """Format a ScanResult into the requested output format."""
-    total = len(result.lockfile_result.deps)
     if fmt == "json":
-        return json_report(
-            result.project_name, result.ecosystem, result.target_version,
-            total, result.classifications, result.usage, result.anchors,
-            is_remote=result.is_remote,
-        )
+        return json_report(result)
     elif fmt == "anchor":
-        return anchor_report(
-            result.project_name, result.ecosystem, result.target_version,
-            result.classifications, result.usage, result.anchors,
-            is_remote=result.is_remote,
-        )
+        return anchor_report(result)
     else:
-        return terminal_report(
-            result.project_name, result.ecosystem, result.target_version,
-            total, result.classifications, result.usage, result.anchors,
-            is_remote=result.is_remote,
-        )
-
-
-def _default_target_version(ecosystem: str) -> str:
-    """Get default target version for the ecosystem."""
-    if ecosystem == "python":
-        return f"{sys.version_info.major}.{sys.version_info.minor}"
-    return ""
+        return terminal_report(result)
 
 
 def _has_full_lockfile(source_file: str) -> bool:
     """Check if the source is a real lockfile (with resolved transitives)."""
-    s = source_file.lower()
-    return "uv.lock" in s or "poetry.lock" in s
+    from pathlib import PurePosixPath
+
+    name = PurePosixPath(source_file).name.lower()
+    return any(name in eco.full_lockfile_names for eco in ecosystems.all_ecosystems())
 
 
 def _resolve_transitive_deps(
@@ -266,7 +238,7 @@ def _resolve_transitive_deps(
     pulled in by something you do depend on.
     """
     from dep_audit import depsdev
-    from dep_audit.lockfiles import Dependency, _normalize
+    from dep_audit.lockfiles import Dependency, normalize_package_name
 
     known: dict[str, Dependency] = {d.name: d for d in lockfile_result.deps}
     # Track parent→child edges for anchor tracing
@@ -295,12 +267,12 @@ def _resolve_transitive_deps(
         node_names: list[str] = []
         for node in nodes:
             vk = node.get("versionKey", {})
-            node_names.append(_normalize(vk.get("name", "")))
+            node_names.append(normalize_package_name(vk.get("name", "")))
 
         # Add transitive deps we haven't seen yet
         for node in nodes:
             vk = node.get("versionKey", {})
-            name = _normalize(vk.get("name", ""))
+            name = normalize_package_name(vk.get("name", ""))
             ver = vk.get("version", "")
             relation = node.get("relation", "")
 
@@ -328,14 +300,12 @@ def _resolve_transitive_deps(
                 else:
                     tree_edges[parent] = [child]
 
-    resolved = LockfileResult(
+    return LockfileResult(
         ecosystem=lockfile_result.ecosystem,
         deps=list(known.values()),
         source_file=lockfile_result.source_file,
+        tree_edges=tree_edges,
     )
-    # Stash edges on the result so _build_dep_tree can use them
-    resolved._tree_edges = tree_edges  # type: ignore[attr-defined]
-    return resolved
 
 
 def _build_dep_tree(
@@ -348,10 +318,8 @@ def _build_dep_tree(
     If the lockfile was enriched with deps.dev data (via _resolve_transitive_deps),
     uses the real parent→child edges. Otherwise falls back to a flat structure.
     """
-    # Check if we have real edges from dependency resolution
-    edges = getattr(lockfile_result, "_tree_edges", None)
-    if edges:
-        return edges
+    if lockfile_result.tree_edges is not None:
+        return lockfile_result.tree_edges
 
     tree: dict[str, list[str]] = {}
     for d in lockfile_result.deps:

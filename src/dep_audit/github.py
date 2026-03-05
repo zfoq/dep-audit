@@ -6,12 +6,16 @@ Responses are cached so repeated scans of the same repo don't re-download.
 
 from __future__ import annotations
 
+import logging
 import re
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
 
 from dep_audit import cache
+
+logger = logging.getLogger("dep_audit")
 
 _RAW_BASE = "https://raw.githubusercontent.com"
 _TTL_REMOTE = 3600  # 1 hour — lockfiles don't change that often
@@ -24,36 +28,6 @@ class RepoRef:
     ref: str = "HEAD"
 
 
-# Lockfile names to probe, grouped by ecosystem.
-# Order matters — first found wins (same priority as lockfiles.py).
-# "companions" are extra files fetched alongside the lockfile (e.g. pyproject.toml
-# is needed by the uv.lock parser to figure out which deps are direct).
-_LOCKFILE_MAP: dict[str, list[dict]] = {
-    "python": [
-        {"file": "uv.lock", "companions": ["pyproject.toml"]},
-        {"file": "poetry.lock", "companions": ["pyproject.toml"]},
-        {"file": "pyproject.toml", "companions": []},
-        {"file": "requirements.txt", "companions": []},
-    ],
-    "npm": [
-        {"file": "package-lock.json", "companions": ["package.json"]},
-        {"file": "yarn.lock", "companions": ["package.json"]},
-        {"file": "pnpm-lock.yaml", "companions": ["package.json"]},
-        {"file": "package.json", "companions": []},
-    ],
-    "cargo": [
-        {"file": "Cargo.lock", "companions": ["Cargo.toml"]},
-        {"file": "Cargo.toml", "companions": []},
-    ],
-}
-
-# Marker files for ecosystem detection — if any of these exist, that
-# ecosystem is present. We only probe the ones that are cheap (one HTTP each).
-_ECOSYSTEM_MARKERS: dict[str, list[str]] = {
-    "python": ["uv.lock", "poetry.lock", "pyproject.toml", "requirements.txt", "setup.py"],
-    "npm": ["package.json"],
-    "cargo": ["Cargo.toml"],
-}
 
 
 def parse_github_url(url_or_shorthand: str) -> RepoRef | None:
@@ -105,28 +79,36 @@ def fetch_file(repo: RepoRef, path: str) -> str | None:
 
     url = f"{_RAW_BASE}/{repo.owner}/{repo.repo}/{repo.ref}/{path}"
     req = urllib.request.Request(url)
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            content = resp.read().decode("utf-8")
-        cache.put("github", cache_key, {"content": content})
-        return content
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                content = resp.read().decode("utf-8")
+            cache.put("github", cache_key, {"content": content})
+            return content
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None
+            if e.code == 429 and attempt < 2:
+                delay = (1.0, 3.0)[attempt]
+                logger.debug("Rate limited by GitHub, retrying in %.0fs...", delay)
+                time.sleep(delay)
+                continue
             return None
-        # Other HTTP errors (rate limit, server error) — treat as unavailable
-        return None
-    except (urllib.error.URLError, OSError):
-        return None
+        except (urllib.error.URLError, OSError):
+            return None
+    return None
 
 
 def detect_remote_ecosystem(repo: RepoRef) -> list[str]:
     """Detect ecosystems by probing for marker files in the repo root."""
+    from dep_audit import ecosystems
+
     found: list[str] = []
-    for eco, markers in _ECOSYSTEM_MARKERS.items():
-        for marker in markers:
+    for eco in ecosystems.all_ecosystems():
+        for marker in eco.markers:
             content = fetch_file(repo, marker)
             if content is not None:
-                found.append(eco)
+                found.append(eco.name)
                 break
     return found
 
@@ -137,17 +119,20 @@ def fetch_lockfile_bundle(repo: RepoRef, ecosystem: str) -> dict[str, str]:
     Tries files in priority order, grabs the first one found plus any companions
     (e.g. pyproject.toml alongside uv.lock). Returns empty dict if nothing found.
     """
-    entries = _LOCKFILE_MAP.get(ecosystem, [])
+    from dep_audit import ecosystems
 
-    for entry in entries:
-        filename = entry["file"]
-        content = fetch_file(repo, filename)
+    eco = ecosystems.get_or_none(ecosystem)
+    if eco is None:
+        return {}
+
+    for spec in eco.lockfiles:
+        content = fetch_file(repo, spec.file)
         if content is None:
             continue
 
         # Got the lockfile — now fetch companions
-        bundle: dict[str, str] = {filename: content}
-        for companion in entry["companions"]:
+        bundle: dict[str, str] = {spec.file: content}
+        for companion in spec.companions:
             comp_content = fetch_file(repo, companion)
             if comp_content is not None:
                 bundle[companion] = comp_content

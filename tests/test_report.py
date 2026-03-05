@@ -4,7 +4,9 @@ import json
 
 from dep_audit.anchors import AnchorResult
 from dep_audit.classify import Classification
+from dep_audit.lockfiles_pkg._types import Dependency, LockfileResult
 from dep_audit.report import anchor_report, json_report, terminal_report
+from dep_audit.types import ScanResult
 from dep_audit.usage import FileRef, UsageReport
 
 
@@ -40,9 +42,29 @@ def _make_test_data():
     return classifications, usage, anchors
 
 
+def _make_scan_result(
+    classifications=None, usage=None, anchors=None,
+    project_name="myproject", ecosystem="python",
+    target_version="3.12", total_deps=10, is_remote=False,
+):
+    if classifications is None:
+        classifications, usage, anchors = _make_test_data()
+    deps = [Dependency(name=f"dep{i}", version="1.0") for i in range(total_deps)]
+    return ScanResult(
+        project_name=project_name,
+        ecosystem=ecosystem,
+        target_version=target_version,
+        lockfile_result=LockfileResult(ecosystem=ecosystem, deps=deps),
+        classifications=classifications,
+        usage=usage or {},
+        anchors=anchors or {},
+        is_remote=is_remote,
+    )
+
+
 def test_terminal_report_has_sections():
-    classifications, usage, anchors = _make_test_data()
-    output = terminal_report("myproject", "python", "3.12", 10, classifications, usage, anchors)
+    result = _make_scan_result()
+    output = terminal_report(result)
     assert "REMOVE" in output
     assert "REPLACE" in output
     assert "DEPRECATED" in output
@@ -52,8 +74,8 @@ def test_terminal_report_has_sections():
 
 
 def test_terminal_report_unused_section():
-    classifications, usage, anchors = _make_test_data()
-    output = terminal_report("myproject", "python", "3.12", 10, classifications, usage, anchors)
+    result = _make_scan_result()
+    output = terminal_report(result)
     # colorama is unused (0 imports) so it should be in the REMOVE section
     remove_idx = output.index("REMOVE")
     replace_idx = output.index("REPLACE")
@@ -62,8 +84,8 @@ def test_terminal_report_unused_section():
 
 
 def test_json_report_valid_json():
-    classifications, usage, anchors = _make_test_data()
-    output = json_report("myproject", "python", "3.12", 10, classifications, usage, anchors)
+    result = _make_scan_result()
+    output = json_report(result)
     data = json.loads(output)
     assert data["project"] == "myproject"
     assert data["ecosystem"] == "python"
@@ -73,8 +95,8 @@ def test_json_report_valid_json():
 
 
 def test_json_report_flagged_count():
-    classifications, usage, anchors = _make_test_data()
-    output = json_report("myproject", "python", "3.12", 10, classifications, usage, anchors)
+    result = _make_scan_result()
+    output = json_report(result)
     data = json.loads(output)
     # Only pytz and colorama are flagged (requests is "ok")
     assert len(data["flagged"]) == 2
@@ -83,8 +105,8 @@ def test_json_report_flagged_count():
 
 
 def test_anchor_report_groups():
-    classifications, usage, anchors = _make_test_data()
-    output = anchor_report("myproject", "python", "3.12", classifications, usage, anchors)
+    result = _make_scan_result()
+    output = anchor_report(result)
     assert "grouped by anchor" in output
     assert "colorama" in output
     assert "pytz" in output
@@ -95,6 +117,9 @@ def test_terminal_report_no_flagged():
     classifications = [
         Classification(name="requests", version="2.31.0", classification="ok", is_direct=True),
     ]
-    output = terminal_report("myproject", "python", "3.12", 1, classifications, {}, {})
+    result = _make_scan_result(
+        classifications=classifications, usage={}, anchors={}, total_deps=1,
+    )
+    output = terminal_report(result)
     assert "(none)" in output
     assert "0 unnecessary" in output

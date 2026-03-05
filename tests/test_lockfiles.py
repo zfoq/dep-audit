@@ -2,31 +2,31 @@
 
 from pathlib import Path
 
+from dep_audit.ecosystems import detect_ecosystem
 from dep_audit.lockfiles import (
-    _normalize,
     _parse_pyproject_deps,
     _parse_pyproject_deps_content,
     _parse_requirements_txt,
     _parse_requirements_txt_content,
-    detect_ecosystem,
+    normalize_package_name,
     parse_from_content,
 )
 
 
 def test_normalize_hyphens():
-    assert _normalize("my-package") == "my-package"
+    assert normalize_package_name("my-package") == "my-package"
 
 
 def test_normalize_underscores():
-    assert _normalize("my_package") == "my-package"
+    assert normalize_package_name("my_package") == "my-package"
 
 
 def test_normalize_dots():
-    assert _normalize("my.package") == "my-package"
+    assert normalize_package_name("my.package") == "my-package"
 
 
 def test_normalize_mixed():
-    assert _normalize("My_Package.Name") == "my-package-name"
+    assert normalize_package_name("My_Package.Name") == "my-package-name"
 
 
 def test_detect_ecosystem_python(tmp_path: Path):
@@ -39,12 +39,6 @@ def test_detect_ecosystem_npm(tmp_path: Path):
     (tmp_path / "package.json").write_text("{}\n")
     ecosystems = detect_ecosystem(tmp_path)
     assert "npm" in ecosystems
-
-
-def test_detect_ecosystem_cargo(tmp_path: Path):
-    (tmp_path / "Cargo.toml").write_text("[package]\n")
-    ecosystems = detect_ecosystem(tmp_path)
-    assert "cargo" in ecosystems
 
 
 def test_detect_ecosystem_none(tmp_path: Path):

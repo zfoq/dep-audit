@@ -10,37 +10,34 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from dep_audit.anchors import AnchorResult
-from dep_audit.classify import Classification
 from dep_audit.usage import UsageReport
 
-
-def _try_rich() -> bool:
-    try:
-        import rich  # noqa: F401
-        return True
-    except ImportError:
-        return False
+if TYPE_CHECKING:
+    from dep_audit.anchors import AnchorResult
+    from dep_audit.classify import Classification
+    from dep_audit.types import ScanResult
 
 
-def terminal_report(
-    project_name: str,
-    ecosystem: str,
-    target_version: str,
-    total_production_deps: int,
-    classifications: list[Classification],
-    usage: dict[str, UsageReport],
-    anchors: dict[str, AnchorResult],
-    is_remote: bool = False,
-) -> str:
+def terminal_report(result: ScanResult) -> str:
     """Generate terminal report string."""
+    from dep_audit import ecosystems as eco_mod
+
+    project_name = result.project_name
+    ecosystem = result.ecosystem
+    target_version = result.target_version
+    total_production_deps = len(result.lockfile_result.deps)
+    classifications = result.classifications
+    usage = result.usage
+    anchors = result.anchors
+    is_remote = result.is_remote
+
     lines: list[str] = []
     flagged = [c for c in classifications if c.classification != "ok"]
 
     mode_label = " (remote)" if is_remote else ""
-    eco_label = f"{ecosystem.capitalize()} {target_version}"
+    eco_label = f"{eco_mod.display_name(ecosystem)} {target_version}"
     lines.append("")
     lines.append(f"{'=' * 3} dep-audit: {project_name}{mode_label} ({eco_label}) {'=' * 3}")
     lines.append("")
@@ -145,17 +142,17 @@ def terminal_report(
     return "\n".join(lines)
 
 
-def json_report(
-    project_name: str,
-    ecosystem: str,
-    target_version: str,
-    total_production_deps: int,
-    classifications: list[Classification],
-    usage: dict[str, UsageReport],
-    anchors: dict[str, AnchorResult],
-    is_remote: bool = False,
-) -> str:
+def json_report(result: ScanResult) -> str:
     """Generate JSON report string."""
+    project_name = result.project_name
+    ecosystem = result.ecosystem
+    target_version = result.target_version
+    total_production_deps = len(result.lockfile_result.deps)
+    classifications = result.classifications
+    usage = result.usage
+    anchors = result.anchors
+    is_remote = result.is_remote
+
     flagged = [c for c in classifications if c.classification != "ok"]
 
     flagged_out: list[dict[str, Any]] = []
@@ -220,16 +217,14 @@ def json_report(
     return json.dumps(report, indent=2)
 
 
-def anchor_report(
-    project_name: str,
-    ecosystem: str,
-    target_version: str,
-    classifications: list[Classification],
-    usage: dict[str, UsageReport],
-    anchors: dict[str, AnchorResult],
-    is_remote: bool = False,
-) -> str:
+def anchor_report(result: ScanResult) -> str:
     """Generate anchor-grouped report."""
+    project_name = result.project_name
+    classifications = result.classifications
+    usage = result.usage
+    anchors = result.anchors
+    is_remote = result.is_remote
+
     lines: list[str] = []
     mode_label = " (remote)" if is_remote else ""
     lines.append("")
