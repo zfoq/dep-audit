@@ -14,7 +14,7 @@ from dep_audit import ecosystems
 from dep_audit.anchors import AnchorResult, trace_anchors
 from dep_audit.classify import classify_all
 from dep_audit.lockfiles import LockfileResult, parse
-from dep_audit.report import anchor_report, json_report, terminal_report
+from dep_audit.report import json_report, terminal_report
 from dep_audit.types import ScanResult
 
 logger = logging.getLogger("dep_audit")
@@ -201,7 +201,17 @@ def scan_remote(
         result.dependency_tree = _build_dep_tree(lockfile_result, eco, offline)
 
         # Skip: usage scanning (no source code)
-        # Skip: anchor tracing (verdicts depend on usage data)
+
+        # Trace anchors — chains show "pulled in by X" even without usage data
+        direct_names = {d.name for d in lockfile_result.deps if d.is_direct}
+        flagged_transitive = [
+            c.name for c in result.classifications
+            if c.classification != "ok" and not c.is_direct
+        ]
+        if flagged_transitive:
+            result.anchors = _trace_anchors_no_usage(
+                result.dependency_tree, flagged_transitive, direct_names,
+            )
 
         results.append(result)
 
@@ -212,8 +222,6 @@ def format_report(result: ScanResult, fmt: str = "terminal") -> str:
     """Format a ScanResult into the requested output format."""
     if fmt == "json":
         return json_report(result)
-    elif fmt == "anchor":
-        return anchor_report(result)
     else:
         return terminal_report(result)
 
@@ -306,6 +314,44 @@ def _resolve_transitive_deps(
         source_file=lockfile_result.source_file,
         tree_edges=tree_edges,
     )
+
+
+def _trace_anchors_no_usage(
+    dependency_tree: dict[str, list[str]],
+    flagged_packages: list[str],
+    direct_deps: set[str],
+) -> dict[str, AnchorResult]:
+    """Trace anchors without usage data (remote scans).
+
+    Provides chain information ("pulled in by X") with an UNKNOWN verdict
+    since we can't classify without import usage data.
+    """
+    from dep_audit.anchors import _find_path_to_direct
+
+    # Build reverse graph: child -> parents
+    reverse: dict[str, set[str]] = {}
+    for parent, children in dependency_tree.items():
+        for child in children:
+            reverse.setdefault(child, set()).add(parent)
+
+    results: dict[str, AnchorResult] = {}
+    for pkg in flagged_packages:
+        if pkg in direct_deps:
+            chain = [pkg]
+            anchor_name = pkg
+        else:
+            chain = _find_path_to_direct(pkg, reverse, direct_deps)
+            if not chain:
+                continue
+            anchor_name = chain[0]
+
+        results[pkg] = AnchorResult(
+            anchor_name=anchor_name,
+            anchor_verdict="UNKNOWN",
+            chain=chain,
+        )
+
+    return results
 
 
 def _build_dep_tree(

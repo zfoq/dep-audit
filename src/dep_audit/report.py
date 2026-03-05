@@ -1,4 +1,4 @@
-"""Report formatting: terminal (plain text), JSON, and anchor-grouped views.
+"""Report formatting: terminal (plain text) and JSON.
 
 The terminal report is designed to be scannable — most actionable stuff first
 (unused deps you can just delete), then replacements, then deprecated packages.
@@ -215,86 +215,6 @@ def json_report(result: ScanResult) -> str:
     }
 
     return json.dumps(report, indent=2)
-
-
-def anchor_report(result: ScanResult) -> str:
-    """Generate anchor-grouped report."""
-    project_name = result.project_name
-    classifications = result.classifications
-    usage = result.usage
-    anchors = result.anchors
-    is_remote = result.is_remote
-
-    lines: list[str] = []
-    mode_label = " (remote)" if is_remote else ""
-    lines.append("")
-    lines.append(f"{'=' * 3} dep-audit: {project_name}{mode_label} — grouped by anchor {'=' * 3}")
-    lines.append("")
-
-    if is_remote:
-        lines.append("NOTE: Remote scan — anchor verdicts unavailable (no import data).")
-        lines.append("")
-
-    flagged = [c for c in classifications if c.classification != "ok"]
-    if not flagged:
-        lines.append("No unnecessary dependencies found.")
-        lines.append("")
-        return "\n".join(lines)
-
-    # Group by anchor
-    cls_map = {c.name: c for c in flagged}
-    anchor_groups: dict[str, list[str]] = {}
-
-    for c in flagged:
-        a = anchors.get(c.name)
-        if c.is_direct:
-            anchor_groups.setdefault(c.name, [])
-        elif a:
-            anchor_groups.setdefault(a.anchor_name, []).append(c.name)
-
-    for anchor_name in sorted(anchor_groups.keys()):
-        deps_under = anchor_groups[anchor_name]
-        c = cls_map.get(anchor_name)
-        u = usage.get(anchor_name, UsageReport())
-
-        if c:
-            repl = f" → {c.replacement}" if c.replacement else ""
-            verdict = anchors.get(anchor_name)
-            verdict_str = f" ({verdict.anchor_verdict})" if verdict else ""
-            lines.append(f"{anchor_name}{verdict_str}{repl}")
-            if c.classification != "ok":
-                pl = "s" if u.import_count != 1 else ""
-                lines.append(f"  ├── itself: {c.classification}, {u.import_count} import{pl}")
-        else:
-            verdict = anchors.get(anchor_name)
-            verdict_str = f" ({verdict.anchor_verdict})" if verdict else ""
-            lines.append(f"{anchor_name}{verdict_str}")
-            pl = "s" if u.import_count != 1 else ""
-            lines.append(f"  ├── {u.import_count} import{pl} in source")
-
-        for dep in deps_under:
-            dep_c = cls_map.get(dep)
-            if dep_c:
-                lines.append(f"  └── brings in: {dep} ({dep_c.classification})")
-
-        # Action line
-        if is_remote:
-            if c and c.replacement:
-                lines.append(f"  action: replace with {c.replacement}")
-            else:
-                lines.append(f"  action: {c.classification if c else 'review'}")
-        elif u.import_count == 0:
-            lines.append("  action: delete from dependency list")
-        elif c and c.replacement:
-            pl = "s" if u.import_count != 1 else ""
-            total = 1 + len(deps_under)
-            lines.append(f"  action: replace {u.import_count} import{pl}, removes {total} packages total")
-        else:
-            lines.append(f"  action: review {u.import_count} import sites")
-
-        lines.append("")
-
-    return "\n".join(lines)
 
 
 def _is_unused(c: Classification, usage: dict[str, UsageReport]) -> bool:

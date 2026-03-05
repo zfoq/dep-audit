@@ -5,7 +5,7 @@ import json
 from dep_audit.anchors import AnchorResult
 from dep_audit.classify import Classification
 from dep_audit.lockfiles_pkg._types import Dependency, LockfileResult
-from dep_audit.report import anchor_report, json_report, terminal_report
+from dep_audit.report import json_report, terminal_report
 from dep_audit.types import ScanResult
 from dep_audit.usage import FileRef, UsageReport
 
@@ -102,14 +102,6 @@ def test_json_report_flagged_count():
     assert len(data["flagged"]) == 2
     names = {f["name"] for f in data["flagged"]}
     assert names == {"pytz", "colorama"}
-
-
-def test_anchor_report_groups():
-    result = _make_scan_result()
-    output = anchor_report(result)
-    assert "grouped by anchor" in output
-    assert "colorama" in output
-    assert "pytz" in output
 
 
 def test_terminal_report_no_flagged():

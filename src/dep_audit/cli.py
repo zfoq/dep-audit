@@ -54,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
     p_scan.add_argument("--ecosystem", help="Force a specific ecosystem")
     p_scan.add_argument("--target-version", help="Language version the project targets")
     p_scan.add_argument("--include-dev", action="store_true", help="Include dev dependencies")
-    p_scan.add_argument("--format", choices=["terminal", "json", "anchor"], default="terminal")
+    p_scan.add_argument("--format", choices=["terminal", "json"], default="terminal")
     p_scan.add_argument("--offline", action="store_true", help="Skip deps.dev API calls")
     p_scan.add_argument("--ref", default="HEAD", help="Git ref for remote repos (branch/tag/commit)")
     p_scan.add_argument(
@@ -78,9 +78,6 @@ def main(argv: list[str] | None = None) -> int:
     p_db_show = db_sub.add_parser("show", help="Show a single entry")
     p_db_show.add_argument("package", help="Package name")
     p_db_show.add_argument("--ecosystem", default="python")
-
-    p_db_validate = db_sub.add_parser("validate", help="Validate all entries")
-    p_db_validate.add_argument("ecosystem", nargs="?", default="python")
 
     p_db_export = db_sub.add_parser("export", help="Export discovered entries")
     p_db_export.add_argument("--discovered", action="store_true", required=True)
@@ -253,23 +250,20 @@ def _cmd_db(args: argparse.Namespace) -> int:
         return _cmd_db_list(args)
     elif args.db_command == "show":
         return _cmd_db_show(args)
-    elif args.db_command == "validate":
-        return _cmd_db_validate(args)
     elif args.db_command == "export":
         return _cmd_db_export(args)
     else:
-        logger.error("Usage: dep-audit db {list|show|validate|export}")
+        logger.error("Usage: dep-audit db {list|show|export}")
         return 1
 
 
 def _cmd_db_list(args: argparse.Namespace) -> int:
-    from dep_audit.db import list_entries, load_junk_db
+    from dep_audit.db import list_entries
 
     ecosystem = args.ecosystem
-    db = load_junk_db(ecosystem)
     groups = list_entries(ecosystem)
 
-    total = len(db)
+    total = sum(len(v) for v in groups.values())
     print(f"\n  {ecosystem}: {total} entries\n")
 
     for type_name, names in sorted(groups.items()):
@@ -295,30 +289,6 @@ def _cmd_db_show(args: argparse.Namespace) -> int:
     else:
         import json
         print(json.dumps(entry, indent=2, default=str))
-
-    return 0
-
-
-def _cmd_db_validate(args: argparse.Namespace) -> int:
-    from dep_audit.db import validate_all
-
-    errors, warnings = validate_all(args.ecosystem)
-
-    for w in warnings:
-        print(f"  WARNING: {w}")
-    for e in errors:
-        print(f"  ERROR: {e}")
-
-    if not errors and not warnings:
-        print(f"  All {args.ecosystem} entries valid.")
-
-    if warnings and not errors:
-        print(f"\n  {len(warnings)} warning(s), 0 errors. Validation passed.")
-        return 0
-
-    if errors:
-        print(f"\n  {len(errors)} error(s), {len(warnings)} warning(s). Validation failed.")
-        return 1
 
     return 0
 

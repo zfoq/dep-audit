@@ -37,13 +37,6 @@ def test_db_show_missing(capsys):
     assert ret == 1
 
 
-def test_db_validate(capsys):
-    ret = main(["db", "validate", "python"])
-    assert ret == 0
-    captured = capsys.readouterr()
-    assert "valid" in captured.out.lower() or "entries" in captured.out.lower()
-
-
 def test_check_known_package(capsys):
     """Checking a known junk package should show its classification."""
     ret = main(["check", "pytz", "--ecosystem", "python"])
