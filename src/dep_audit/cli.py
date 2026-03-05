@@ -96,6 +96,10 @@ def main(argv: list[str] | None = None) -> int:
     p_scan_list.add_argument("--ref", default=None, help="Override git ref for the targeted repo")
     p_scan_list.add_argument("--discover", action="store_true", help="Auto-discover new junk DB entries")
     p_scan_list.add_argument(
+        "--no-write", action="store_true",
+        help="Don't write results back to the TOML file",
+    )
+    p_scan_list.add_argument(
         "--exit-code", action="store_true",
         help="Exit with code 1 if any flagged dependencies are found (for CI)",
     )

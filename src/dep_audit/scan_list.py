@@ -120,8 +120,9 @@ def cmd_scan_list(args: argparse.Namespace) -> int:
         repo_entry["scans"] = merged_scans
         grouped.append(repo_entry)
 
-    # Write enriched TOML back to file
-    write_scan_list_toml(path, grouped)
+    # Write enriched TOML back to file (unless --no-write)
+    if not args.no_write:
+        write_scan_list_toml(path, grouped)
 
     if args.format == "json":
         output = {

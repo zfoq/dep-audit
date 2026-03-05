@@ -167,6 +167,27 @@ Use `--exit-code` to fail when flagged dependencies are found:
 dep-audit scan . --exit-code --offline
 ```
 
+### GitHub Actions
+
+```yaml
+name: dep-audit
+on: [push, pull_request]
+jobs:
+  dep-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uvx dep-audit scan . --exit-code --offline
+```
+
+### Batch scanning in CI
+
+```bash
+# Scan repos without writing results back to the TOML file
+dep-audit scan-list repos.toml --no-write --exit-code
+```
+
 ## Architecture
 
 ```
@@ -193,7 +214,7 @@ src/dep_audit/
 ├── db/              # Pre-seeded junk database
 │   ├── python/      # 25 entries
 │   ├── npm/         # 13 entries
-│   └── cargo/       # 2 entries
+│   └── cargo/       # 6 entries
 └── stdlib_map/      # Stdlib replacement lookup tables
 ```
 
