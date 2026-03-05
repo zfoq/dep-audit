@@ -1,0 +1,14 @@
+name = "error-chain"
+ecosystem = "cargo"
+type = "deprecated"
+confidence = 0.90
+
+replacement = "thiserror (libraries) or anyhow (applications)"
+summary = "Unmaintained macro-heavy error handling; superseded by simpler alternatives."
+
+flags = [
+    "deprecated: unmaintained since 2020",
+    "deprecated: use thiserror for libraries, anyhow for applications",
+]
+
+validated = 2026-03-05

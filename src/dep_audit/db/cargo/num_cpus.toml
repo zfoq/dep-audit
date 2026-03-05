@@ -1,0 +1,13 @@
+name = "num_cpus"
+ecosystem = "cargo"
+type = "stdlib_backport"
+confidence = 0.90
+
+replacement = "std::thread::available_parallelism()"
+stdlib_since = "1.59"
+
+flags = [
+    "stdlib_backport: std::thread::available_parallelism() available since Rust 1.59",
+]
+
+validated = 2026-03-05

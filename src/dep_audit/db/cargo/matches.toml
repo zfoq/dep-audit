@@ -1,0 +1,13 @@
+name = "matches"
+ecosystem = "cargo"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "std::matches!"
+stdlib_since = "1.42"
+
+flags = [
+    "stdlib_backport: matches! macro stabilized in Rust 1.42",
+]
+
+validated = 2026-03-05

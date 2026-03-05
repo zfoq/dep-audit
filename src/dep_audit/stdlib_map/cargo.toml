@@ -5,3 +5,15 @@ since = "1.80"
 [once_cell]
 module = "std::sync::OnceLock"
 since = "1.70"
+
+[try_from]
+module = "std::convert::TryFrom"
+since = "1.34"
+
+[matches]
+module = "std::matches!"
+since = "1.42"
+
+[num_cpus]
+module = "std::thread::available_parallelism()"
+since = "1.59"

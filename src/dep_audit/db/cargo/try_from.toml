@@ -1,0 +1,13 @@
+name = "try_from"
+ecosystem = "cargo"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "std::convert::TryFrom"
+stdlib_since = "1.34"
+
+flags = [
+    "stdlib_backport: std::convert::TryFrom stabilized in Rust 1.34",
+]
+
+validated = 2026-03-05
