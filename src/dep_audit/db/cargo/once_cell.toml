@@ -1,0 +1,13 @@
+name = "once_cell"
+ecosystem = "cargo"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "std::sync::OnceLock"
+stdlib_since = "1.70"
+
+flags = [
+    "stdlib_backport: std::sync::OnceLock available since Rust 1.70",
+]
+
+validated = 2026-03-05

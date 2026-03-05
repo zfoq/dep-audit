@@ -1,0 +1,13 @@
+name = "lazy_static"
+ecosystem = "cargo"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "std::sync::LazyLock"
+stdlib_since = "1.80"
+
+flags = [
+    "stdlib_backport: std::sync::LazyLock available since Rust 1.80",
+]
+
+validated = 2026-03-05
