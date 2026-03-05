@@ -47,6 +47,7 @@ def cmd_scan_list(args: argparse.Namespace) -> int:
         repo = entry.get("repo", "")
         ecosystem = entry.get("ecosystem")
         ref = entry.get("ref", "HEAD")
+        target_version = entry.get("target_version")
         old_scans = entry.get("scans", [])
 
         if not repo:
@@ -62,15 +63,16 @@ def cmd_scan_list(args: argparse.Namespace) -> int:
             })
             continue
 
-        # --ref overrides the ref from config
+        # CLI flags override per-entry config
         if ref_override:
             ref = ref_override
+        tv = args.target_version or target_version
 
         results = scan_remote(
             repo_url=repo,
             ref=ref,
             ecosystem=ecosystem,
-            target_version=args.target_version,
+            target_version=tv,
             offline=args.offline,
         )
 
@@ -106,15 +108,20 @@ def cmd_scan_list(args: argparse.Namespace) -> int:
         if not detected_eco and flat_results:
             detected_eco = flat_results[-1]["ecosystem"]
 
-        grouped.append({
+        repo_entry: dict = {
             "name": name,
             "repo": repo,
             "ecosystem": detected_eco or "",
-            "scans": merged_scans,
-        })
+        }
+        if ref != "HEAD":
+            repo_entry["ref"] = ref
+        if target_version:
+            repo_entry["target_version"] = target_version
+        repo_entry["scans"] = merged_scans
+        grouped.append(repo_entry)
 
     # Write enriched TOML back to file
-    write_showcase_toml(path, grouped)
+    write_scan_list_toml(path, grouped)
 
     if args.format == "json":
         output = {
@@ -152,8 +159,8 @@ def _merge_scans(old_scans: list[dict], new_scans: list[dict]) -> list[dict]:
     return list(merged.values())
 
 
-def write_showcase_toml(path: Path, entries: list[dict]) -> None:
-    """Write enriched showcase TOML with scan results inlined.
+def write_scan_list_toml(path: Path, entries: list[dict]) -> None:
+    """Write enriched scan-list TOML with scan results inlined.
 
     Reads the original file to preserve comment lines (section headers),
     then writes the full file with config + scan results.
@@ -169,33 +176,31 @@ def write_showcase_toml(path: Path, entries: list[dict]) -> None:
     except OSError:
         pass
 
-    lines: list[str] = []
-    # Write leading comments (file header)
-    comment_idx = 0
-    while comment_idx < len(comments) and not any(
-        c.lower().startswith("# python") or c.lower().startswith("# javascript")
-        for c in comments[comment_idx:comment_idx + 1]
-    ):
-        lines.append(comments[comment_idx])
-        comment_idx += 1
-
-    if not lines:
-        lines.append("# Showcase: popular projects to scan periodically.")
-        lines.append("# Run: dep-audit scan-list showcase.toml")
-
-    # Track which section comments we've used — derive keywords from registry
+    # Derive ecosystem keywords from registry for section comment detection
     from dep_audit import ecosystems as eco_mod
 
     eco_keywords: set[str] = set()
     for eco_cfg in eco_mod.all_ecosystems():
         eco_keywords.add(eco_cfg.name.lower())
         eco_keywords.add(eco_cfg.display_name.lower())
-    # Common aliases that appear in TOML section comments
     eco_keywords.update({"javascript", "rust"})
 
-    section_comments = [c for c in comments if any(
-        keyword in c.lower() for keyword in eco_keywords
-    )]
+    def _is_section_comment(comment: str) -> bool:
+        cl = comment.lower()
+        return any(kw in cl for kw in eco_keywords)
+
+    lines: list[str] = []
+    # Write leading comments (file header) — stop at first ecosystem section
+    comment_idx = 0
+    while comment_idx < len(comments) and not _is_section_comment(comments[comment_idx]):
+        lines.append(comments[comment_idx])
+        comment_idx += 1
+
+    if not lines:
+        lines.append("# Batch scan config — add [[repos]] entries below.")
+        lines.append("# Run: dep-audit scan-list <this-file>")
+
+    section_comments = [c for c in comments if _is_section_comment(c)]
 
     prev_ecosystem = None
     is_first = True
@@ -228,6 +233,10 @@ def write_showcase_toml(path: Path, entries: list[dict]) -> None:
         lines.append(f'repo = "{entry["repo"]}"')
         if eco:
             lines.append(f'ecosystem = "{eco}"')
+        if entry.get("ref"):
+            lines.append(f'ref = "{entry["ref"]}"')
+        if entry.get("target_version"):
+            lines.append(f'target_version = "{entry["target_version"]}"')
 
         for scan in entry.get("scans", []):
             lines.append("")
@@ -288,9 +297,9 @@ def format_terminal(results: list[dict]) -> None:
 
 
 def format_markdown(results: list[dict]) -> str:
-    """Generate a markdown table for SHOWCASE.md or CI output."""
+    """Generate a markdown table for CI or documentation output."""
     lines: list[str] = []
-    lines.append("# dep-audit showcase")
+    lines.append("# dep-audit scan-list results")
     lines.append("")
     lines.append(f"*Last updated: {datetime.now(UTC).strftime('%Y-%m-%d')}*")
     lines.append("")
@@ -314,7 +323,7 @@ def format_markdown(results: list[dict]) -> str:
     total_deps = sum(r.get("deps", r.get("total_deps", 0)) for r in results)
     lines.append(f"**{len(results)} scans** — {total_deps} total deps, {total_flagged} flagged")
     lines.append("")
-    lines.append("*Generated by `dep-audit scan-list showcase.toml --format markdown`*")
+    lines.append("*Generated by `dep-audit scan-list --format markdown`*")
     lines.append("")
     return "\n".join(lines)
 
@@ -324,18 +333,18 @@ def _discover_from_scan_results(scan_results: list) -> None:
     from dep_audit.generate import discover_new
 
     seen: set[str] = set()
-    all_discovered = []
+    all_discovered: list = []
     for result in scan_results:
         for c in discover_new(result.classifications, result.ecosystem):
             if c.name not in seen:
                 seen.add(c.name)
-                all_discovered.append((c, result.ecosystem))
+                all_discovered.append(c)
 
     if not all_discovered:
         logger.info("\n  No new entries to discover.")
         return
 
     logger.info("\n  Discovered %d new package(s) across all scans:", len(all_discovered))
-    for c, _eco in all_discovered:
+    for c in all_discovered:
         logger.info("    %s  →  %s (confidence: %.2f)", c.name, c.classification, c.confidence)
     logger.info("  Use `dep-audit db export --discovered` to export as TOML.")
