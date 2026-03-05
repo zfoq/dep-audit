@@ -1,0 +1,77 @@
+"""File-based JSON cache for API responses.
+
+One JSON file per cached entry, keyed by SHA-256 of the cache key.
+TTL is checked via file mtime — no cleanup daemon needed.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import time
+from pathlib import Path
+
+_DEFAULT_DIR = Path.home() / ".cache" / "dep-audit"
+
+_TTL_METADATA = 24 * 3600  # 24 hours
+_TTL_ADVISORY = 6 * 3600   # 6 hours
+
+
+def _cache_dir() -> Path:
+    d = _DEFAULT_DIR
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _key_path(namespace: str, key: str) -> Path:
+    safe = hashlib.sha256(key.encode()).hexdigest()[:32]
+    d = _cache_dir() / namespace
+    d.mkdir(parents=True, exist_ok=True)
+    return d / f"{safe}.json"
+
+
+def get(namespace: str, key: str, ttl: int = _TTL_METADATA) -> dict | None:
+    """Return cached value or None if missing/expired."""
+    p = _key_path(namespace, key)
+    if not p.exists():
+        return None
+    age = time.time() - p.stat().st_mtime
+    if age > ttl:
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def put(namespace: str, key: str, value: dict) -> None:
+    """Store a value in the cache."""
+    p = _key_path(namespace, key)
+    p.write_text(json.dumps(value, default=str), encoding="utf-8")
+
+
+def clear() -> None:
+    """Delete all cached files."""
+    d = _cache_dir()
+    if not d.exists():
+        return
+    for child in d.rglob("*.json"):
+        child.unlink(missing_ok=True)
+    # Walk deepest-first so we can remove empty dirs bottom-up
+    import contextlib
+
+    for child in sorted(d.rglob("*"), reverse=True):
+        if child.is_dir():
+            with contextlib.suppress(OSError):
+                child.rmdir()
+
+
+def stats() -> dict[str, int]:
+    """Return cache directory size and entry count."""
+    d = _cache_dir()
+    total_size = 0
+    count = 0
+    for f in d.rglob("*.json"):
+        total_size += f.stat().st_size
+        count += 1
+    return {"entries": count, "size_bytes": total_size}
