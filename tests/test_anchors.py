@@ -1,33 +1,33 @@
 """Tests for anchor tracing."""
 
-from dep_audit.anchors import _classify_anchor, trace_anchors
+from dep_audit.anchors import classify_anchor, trace_anchors
 from dep_audit.usage import UsageReport
 
 
 def test_classify_anchor_unused():
     usage = {"my-dep": UsageReport(import_count=0)}
-    assert _classify_anchor("my-dep", {}, usage) == "UNUSED"
+    assert classify_anchor("my-dep", {}, usage) == "UNUSED"
 
 
 def test_classify_anchor_replaceable():
     usage = {"my-dep": UsageReport(import_count=5)}
     junk_db = {"my-dep": {"type": "stdlib_backport"}}
-    assert _classify_anchor("my-dep", junk_db, usage) == "REPLACEABLE"
+    assert classify_anchor("my-dep", junk_db, usage) == "REPLACEABLE"
 
 
 def test_classify_anchor_overkill():
     usage = {"my-dep": UsageReport(import_count=2)}
-    assert _classify_anchor("my-dep", {}, usage) == "OVERKILL"
+    assert classify_anchor("my-dep", {}, usage) == "OVERKILL"
 
 
 def test_classify_anchor_justified():
     usage = {"my-dep": UsageReport(import_count=15)}
-    assert _classify_anchor("my-dep", {}, usage) == "JUSTIFIED"
+    assert classify_anchor("my-dep", {}, usage) == "JUSTIFIED"
 
 
 def test_classify_anchor_missing_usage():
     """A package not in usage data should be treated as unused."""
-    assert _classify_anchor("unknown", {}, {}) == "UNUSED"
+    assert classify_anchor("unknown", {}, {}) == "UNUSED"
 
 
 def test_trace_anchors_direct_dep():

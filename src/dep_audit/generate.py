@@ -2,7 +2,7 @@
 
 The discovery pipeline identifies packages that match detection rules (stdlib_map,
 deps.dev deprecated) but aren't yet in the curated junk DB. These can be exported
-as TOML files for review or written directly to db/{ecosystem}/.
+as TOML files for review.
 """
 
 from __future__ import annotations
@@ -11,9 +11,6 @@ import datetime
 from pathlib import Path
 
 from dep_audit.classify import Classification
-
-_PACKAGE_DIR = Path(__file__).resolve().parent
-_DB_DIR = _PACKAGE_DIR / "db"
 
 
 def discover_new(
@@ -25,14 +22,15 @@ def discover_new(
     Returns only non-ok packages that were classified via stdlib_map or deps.dev
     (not from the curated junk DB).
     """
-    from dep_audit.db import get_junk_entry
+    from dep_audit.db import load_junk_db
 
+    junk_db = load_junk_db(ecosystem)
     discovered = []
     for c in classifications:
         if c.classification == "ok":
             continue
         # Already in the curated DB — not a new discovery
-        if get_junk_entry(ecosystem, c.name):
+        if c.name in junk_db:
             continue
         discovered.append(c)
     return discovered
@@ -65,32 +63,6 @@ def export_discovered(
 
     return written
 
-
-def write_to_db(
-    classifications: list[Classification],
-    ecosystem: str,
-) -> list[Path]:
-    """Write discovered entries directly into db/{ecosystem}/.
-
-    Only writes entries that don't already exist. Returns paths written.
-    """
-    db_dir = _DB_DIR / ecosystem
-    db_dir.mkdir(parents=True, exist_ok=True)
-
-    written: list[Path] = []
-    for c in classifications:
-        if c.classification == "ok":
-            continue
-
-        path = db_dir / f"{c.name}.toml"
-        if path.exists():
-            continue
-
-        content = format_toml_entry(c, ecosystem)
-        path.write_text(content, encoding="utf-8")
-        written.append(path)
-
-    return written
 
 
 def format_toml_entry(c: Classification, ecosystem: str) -> str:

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import tomllib
 from pathlib import Path
+
+logger = logging.getLogger("dep_audit")
 
 _PACKAGE_DIR = Path(__file__).resolve().parent
 _DB_DIR = _PACKAGE_DIR / "db"
@@ -31,9 +34,15 @@ def load_junk_db(ecosystem: str) -> dict[str, dict]:
                 entry = tomllib.load(f)
             name = entry.get("name", p.stem)
             entries[name] = entry
-        except Exception:
+        except Exception as e:
+            logger.warning("Failed to load junk DB entry %s: %s", p.name, e)
             continue
     return entries
+
+
+def get_entry_path(ecosystem: str, package: str) -> Path:
+    """Return the filesystem path for a junk DB entry."""
+    return _DB_DIR / ecosystem / f"{package}.toml"
 
 
 def get_junk_entry(ecosystem: str, package: str) -> dict | None:
@@ -44,7 +53,8 @@ def get_junk_entry(ecosystem: str, package: str) -> dict | None:
     try:
         with open(p, "rb") as f:
             return tomllib.load(f)
-    except Exception:
+    except Exception as e:
+        logger.warning("Failed to load junk DB entry %s: %s", p.name, e)
         return None
 
 

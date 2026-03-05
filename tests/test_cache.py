@@ -35,17 +35,3 @@ def test_clear(tmp_path):
         assert cache.get("test", "key2") is None
 
 
-def test_stats(tmp_path):
-    with patch.object(cache, "_DEFAULT_DIR", tmp_path / "cache"):
-        cache.put("test", "key1", {"data": True})
-        cache.put("test", "key2", {"more": "data"})
-        s = cache.stats()
-        assert s["entries"] == 2
-        assert s["size_bytes"] > 0
-
-
-def test_stats_empty(tmp_path):
-    with patch.object(cache, "_DEFAULT_DIR", tmp_path / "cache"):
-        s = cache.stats()
-        assert s["entries"] == 0
-        assert s["size_bytes"] == 0

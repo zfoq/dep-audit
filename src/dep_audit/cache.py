@@ -13,8 +13,8 @@ from pathlib import Path
 
 _DEFAULT_DIR = Path.home() / ".cache" / "dep-audit"
 
-_TTL_METADATA = 24 * 3600  # 24 hours
-_TTL_ADVISORY = 6 * 3600   # 6 hours
+TTL_METADATA = 24 * 3600  # 24 hours
+TTL_ADVISORY = 6 * 3600   # 6 hours
 
 
 def _cache_dir() -> Path:
@@ -30,7 +30,7 @@ def _key_path(namespace: str, key: str) -> Path:
     return d / f"{safe}.json"
 
 
-def get(namespace: str, key: str, ttl: int = _TTL_METADATA) -> dict | None:
+def get(namespace: str, key: str, ttl: int = TTL_METADATA) -> dict | None:
     """Return cached value or None if missing/expired."""
     p = _key_path(namespace, key)
     if not p.exists():
@@ -64,14 +64,3 @@ def clear() -> None:
         if child.is_dir():
             with contextlib.suppress(OSError):
                 child.rmdir()
-
-
-def stats() -> dict[str, int]:
-    """Return cache directory size and entry count."""
-    d = _cache_dir()
-    total_size = 0
-    count = 0
-    for f in d.rglob("*.json"):
-        total_size += f.stat().st_size
-        count += 1
-    return {"entries": count, "size_bytes": total_size}

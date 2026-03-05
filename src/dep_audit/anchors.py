@@ -51,7 +51,7 @@ def trace_anchors(
                 continue
             anchor_name = chain[0]
 
-        verdict = _classify_anchor(anchor_name, junk_db, usage)
+        verdict = classify_anchor(anchor_name, junk_db, usage)
         results[pkg] = AnchorResult(
             anchor_name=anchor_name,
             anchor_verdict=verdict,
@@ -91,7 +91,7 @@ def _find_path_to_direct(
     return []
 
 
-def _classify_anchor(
+def classify_anchor(
     anchor_name: str,
     junk_db: dict[str, dict],
     usage: dict[str, UsageReport],
@@ -115,12 +115,3 @@ def _classify_anchor(
     return "JUSTIFIED"
 
 
-def group_by_anchor(
-    anchor_results: dict[str, AnchorResult],
-    classifications: dict[str, object],
-) -> dict[str, list[str]]:
-    """Group flagged packages by their anchor. Returns {anchor: [flagged_pkgs]}."""
-    groups: dict[str, list[str]] = {}
-    for pkg, result in anchor_results.items():
-        groups.setdefault(result.anchor_name, []).append(pkg)
-    return groups

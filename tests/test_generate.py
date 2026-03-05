@@ -9,7 +9,6 @@ from dep_audit.generate import (
     discover_new,
     export_discovered,
     format_toml_entry,
-    write_to_db,
 )
 
 
@@ -117,38 +116,6 @@ def test_export_discovered_skips_ok(tmp_path):
     ]
     written = export_discovered(classifications, "python", tmp_path / "python")
     assert len(written) == 0
-
-
-def test_write_to_db_creates_files(tmp_path, monkeypatch):
-    """write_to_db should write files to db/{ecosystem}/."""
-    import dep_audit.generate as gen
-    monkeypatch.setattr(gen, "_DB_DIR", tmp_path / "db")
-
-    classifications = [
-        _make_classification("new-discovery"),
-    ]
-    written = write_to_db(classifications, "python")
-    assert len(written) == 1
-    assert written[0].name == "new-discovery.toml"
-    assert written[0].exists()
-
-
-def test_write_to_db_skips_existing(tmp_path, monkeypatch):
-    """write_to_db should not overwrite existing entries."""
-    import dep_audit.generate as gen
-    monkeypatch.setattr(gen, "_DB_DIR", tmp_path / "db")
-
-    db_dir = tmp_path / "db" / "python"
-    db_dir.mkdir(parents=True)
-    (db_dir / "existing.toml").write_text('name = "existing"\n')
-
-    classifications = [
-        _make_classification("existing"),
-    ]
-    written = write_to_db(classifications, "python")
-    assert len(written) == 0
-    # Verify original content preserved
-    assert (db_dir / "existing.toml").read_text() == 'name = "existing"\n'
 
 
 def test_discover_and_export_roundtrip(tmp_path):

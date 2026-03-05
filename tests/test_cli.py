@@ -60,13 +60,6 @@ def test_check_unknown_package(capsys):
     assert "ok" in captured.out
 
 
-def test_cache_stats(capsys):
-    ret = main(["cache", "stats"])
-    assert ret == 0
-    captured = capsys.readouterr()
-    assert "Entries:" in captured.out
-
-
 def test_scan_this_project_offline(capsys):
     """Scan dep-audit itself in offline mode — it has a pyproject.toml."""
     ret = main(["scan", ".", "--offline", "--format", "json"])
