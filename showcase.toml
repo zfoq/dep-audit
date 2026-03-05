@@ -1,0 +1,59 @@
+# Showcase: popular Python projects to scan periodically.
+# Run: dep-audit scan-list showcase.toml
+
+[[repos]]
+name = "FastAPI"
+repo = "fastapi/fastapi"
+
+[[repos]]
+name = "Flask"
+repo = "pallets/flask"
+
+[[repos]]
+name = "Django"
+repo = "django/django"
+ecosystem = "python"
+
+[[repos]]
+name = "Pydantic"
+repo = "pydantic/pydantic"
+
+[[repos]]
+name = "Starlette"
+repo = "encode/starlette"
+
+[[repos]]
+name = "Typer"
+repo = "tiangolo/typer"
+
+[[repos]]
+name = "Click"
+repo = "pallets/click"
+
+[[repos]]
+name = "Black"
+repo = "psf/black"
+
+[[repos]]
+name = "Odoo"
+repo = "odoo/odoo"
+
+[[repos]]
+name = "Requests"
+repo = "psf/requests"
+
+[[repos]]
+name = "Scrapy"
+repo = "scrapy/scrapy"
+
+[[repos]]
+name = "scikit-learn"
+repo = "scikit-learn/scikit-learn"
+
+[[repos]]
+name = "httpx"
+repo = "encode/httpx"
+
+[[repos]]
+name = "Celery"
+repo = "celery/celery"
