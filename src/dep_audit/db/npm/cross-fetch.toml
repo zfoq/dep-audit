@@ -1,0 +1,14 @@
+name = "cross-fetch"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "fetch (Node 18+)"
+stdlib_since = "18.0"
+
+flags = [
+    "stdlib_backport: global fetch available in Node 18+ and all modern browsers",
+    "stdlib_backport: cross-environment polyfill no longer needed",
+]
+
+validated = 2026-03-05

@@ -23,3 +23,37 @@ since = "8.0"
 module = "fetch"
 since = "18.0"
 note = "also deprecated by maintainer"
+
+[isomorphic-fetch]
+module = "fetch"
+since = "18.0"
+
+[cross-fetch]
+module = "fetch"
+since = "18.0"
+
+[whatwg-url]
+module = "URL"
+since = "10.0"
+
+[url-parse]
+module = "URL"
+since = "10.0"
+
+[string_decoder]
+module = "TextDecoder"
+since = "11.0"
+
+[punycode]
+module = "url.domainToASCII()"
+since = "7.0"
+
+[os-tmpdir]
+module = "os.tmpdir()"
+since = "1.0"
+note = "built-in since Node.js inception"
+
+[path-browserify]
+module = "path"
+since = "1.0"
+note = "Node.js built-in module"

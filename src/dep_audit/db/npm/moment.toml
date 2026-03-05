@@ -1,0 +1,13 @@
+name = "moment"
+ecosystem = "npm"
+type = "deprecated"
+confidence = 0.9
+
+replacement = "Intl.DateTimeFormat, date-fns, or dayjs"
+
+flags = [
+    "deprecated: maintainers recommend alternatives",
+    "deprecated: large bundle size, not tree-shakeable",
+]
+
+validated = 2026-03-05

@@ -1,0 +1,13 @@
+name = "tslint"
+ecosystem = "npm"
+type = "deprecated"
+confidence = 1.0
+
+replacement = "eslint with @typescript-eslint"
+
+flags = [
+    "deprecated: officially deprecated in 2019",
+    "deprecated: maintainers recommend eslint + @typescript-eslint",
+]
+
+validated = 2026-03-05

@@ -1,0 +1,14 @@
+name = "node-fetch"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "fetch (Node 18+)"
+stdlib_since = "18.0"
+
+flags = [
+    "stdlib_backport: global fetch available since Node 18",
+    "stdlib_backport: no polyfill needed on Node 18+",
+]
+
+validated = 2026-03-05

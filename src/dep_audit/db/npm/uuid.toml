@@ -1,0 +1,14 @@
+name = "uuid"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.7
+
+replacement = "crypto.randomUUID() (Node 19+)"
+stdlib_since = "19.0"
+
+flags = [
+    "stdlib_backport: crypto.randomUUID() available since Node 19",
+    "stdlib_backport: only covers v4 UUIDs — keep if using v1/v3/v5",
+]
+
+validated = 2026-03-05

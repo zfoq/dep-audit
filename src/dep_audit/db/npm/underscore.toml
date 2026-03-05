@@ -1,0 +1,13 @@
+name = "underscore"
+ecosystem = "npm"
+type = "micro_utility"
+confidence = 0.7
+
+replacement = "native Array/Object methods (ES6+)"
+
+flags = [
+    "micro_utility: most methods available natively since ES6",
+    "micro_utility: Array.map, Array.filter, Object.keys, Object.assign, etc.",
+]
+
+validated = 2026-03-05

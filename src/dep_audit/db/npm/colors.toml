@@ -1,0 +1,13 @@
+name = "colors"
+ecosystem = "npm"
+type = "deprecated"
+confidence = 0.95
+
+replacement = "chalk, picocolors, or kleur"
+
+flags = [
+    "deprecated: maintainer introduced infinite loop in protest (v1.4.1)",
+    "deprecated: use chalk, picocolors, or kleur instead",
+]
+
+validated = 2026-03-05

@@ -1,0 +1,14 @@
+name = "querystring"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.9
+
+replacement = "URLSearchParams (Node 10+)"
+stdlib_since = "10.0"
+
+flags = [
+    "stdlib_backport: URLSearchParams available since Node 10",
+    "deprecated: Node.js core querystring module is legacy",
+]
+
+validated = 2026-03-05

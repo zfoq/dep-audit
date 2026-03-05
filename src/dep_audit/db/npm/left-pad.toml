@@ -1,0 +1,14 @@
+name = "left-pad"
+ecosystem = "npm"
+type = "micro_utility"
+confidence = 1.0
+
+replacement = "String.prototype.padStart()"
+stdlib_since = "8.0"
+
+flags = [
+    "micro_utility: one-line function replaceable by padStart()",
+    "stdlib_backport: padStart available since Node 8 / ES2017",
+]
+
+validated = 2026-03-05

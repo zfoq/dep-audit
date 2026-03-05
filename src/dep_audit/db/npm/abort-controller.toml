@@ -1,0 +1,13 @@
+name = "abort-controller"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "AbortController (Node 15+)"
+stdlib_since = "15.0"
+
+flags = [
+    "stdlib_backport: AbortController is a global since Node 15",
+]
+
+validated = 2026-03-05

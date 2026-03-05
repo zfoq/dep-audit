@@ -1,0 +1,13 @@
+name = "forever"
+ecosystem = "npm"
+type = "deprecated"
+confidence = 0.9
+
+replacement = "pm2 or systemd"
+
+flags = [
+    "deprecated: unmaintained since 2020",
+    "deprecated: use pm2, systemd, or container orchestration",
+]
+
+validated = 2026-03-05

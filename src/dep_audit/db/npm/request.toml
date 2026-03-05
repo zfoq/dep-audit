@@ -1,0 +1,14 @@
+name = "request"
+ecosystem = "npm"
+type = "deprecated"
+confidence = 1.0
+
+replacement = "fetch (Node 18+)"
+stdlib_since = "18.0"
+
+flags = [
+    "deprecated: officially deprecated by maintainer in 2020",
+    "stdlib_backport: fetch available since Node 18",
+]
+
+validated = 2026-03-05
