@@ -1,0 +1,15 @@
+name = "distribute"
+ecosystem = "python"
+type = "deprecated"
+confidence = 0.95
+
+summary = "Easily download, build, install, upgrade, and uninstall Python packages"
+deprecated = "distribute is merged back into setuptools"
+
+flags = [
+    "deprecated: merged into setuptools",
+]
+
+replacement = "setuptools"
+
+validated = 2026-03-05

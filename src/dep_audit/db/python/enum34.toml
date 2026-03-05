@@ -1,0 +1,16 @@
+name = "enum34"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+summary = "Backport of enum module"
+deprecated = ""
+
+flags = [
+    "stdlib_backport: enum available since Python 3.4",
+]
+
+replacement = "enum"
+stdlib_since = "3.4"
+
+validated = 2026-03-05

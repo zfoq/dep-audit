@@ -1,0 +1,16 @@
+name = "configparser"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+summary = "Backport of configparser module"
+deprecated = ""
+
+flags = [
+    "stdlib_backport: configparser available since Python 3.0",
+]
+
+replacement = "configparser"
+stdlib_since = "3.0"
+
+validated = 2026-03-05

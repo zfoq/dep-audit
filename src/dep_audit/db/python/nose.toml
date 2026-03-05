@@ -1,0 +1,16 @@
+name = "nose"
+ecosystem = "python"
+type = "deprecated"
+confidence = 0.95
+
+summary = "Extends unittest to make testing easier"
+deprecated = "nose is unmaintained, use pytest or unittest"
+
+flags = [
+    "deprecated: unmaintained since 2016",
+    "deprecated: use pytest as replacement",
+]
+
+replacement = "pytest"
+
+validated = 2026-03-05

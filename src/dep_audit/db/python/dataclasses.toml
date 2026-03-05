@@ -1,0 +1,16 @@
+name = "dataclasses"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+summary = "Backport of dataclasses module"
+deprecated = ""
+
+flags = [
+    "stdlib_backport: dataclasses available since Python 3.7",
+]
+
+replacement = "dataclasses"
+stdlib_since = "3.7"
+
+validated = 2026-03-05

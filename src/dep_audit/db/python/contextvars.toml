@@ -1,0 +1,16 @@
+name = "contextvars"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+summary = "Backport of contextvars module"
+deprecated = ""
+
+flags = [
+    "stdlib_backport: contextvars available since Python 3.7",
+]
+
+replacement = "contextvars"
+stdlib_since = "3.7"
+
+validated = 2026-03-05

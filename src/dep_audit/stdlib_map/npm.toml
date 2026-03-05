@@ -1,0 +1,25 @@
+[node-fetch]
+module = "fetch"
+since = "18.0"
+
+[abort-controller]
+module = "AbortController"
+since = "15.0"
+
+[querystring]
+module = "URLSearchParams"
+since = "10.0"
+
+[uuid]
+module = "crypto.randomUUID()"
+since = "19.0"
+note = "v4 UUIDs only"
+
+[left-pad]
+module = "String.prototype.padStart()"
+since = "8.0"
+
+[request]
+module = "fetch"
+since = "18.0"
+note = "also deprecated by maintainer"

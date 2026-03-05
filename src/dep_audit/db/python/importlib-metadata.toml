@@ -1,0 +1,16 @@
+name = "importlib-metadata"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+summary = "Read metadata from Python packages"
+deprecated = ""
+
+flags = [
+    "stdlib_backport: importlib.metadata available since Python 3.8",
+]
+
+replacement = "importlib.metadata"
+stdlib_since = "3.8"
+
+validated = 2026-03-05

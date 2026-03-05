@@ -1,0 +1,16 @@
+name = "futures"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+summary = "Backport of concurrent.futures"
+deprecated = ""
+
+flags = [
+    "stdlib_backport: concurrent.futures available since Python 3.2",
+]
+
+replacement = "concurrent.futures"
+stdlib_since = "3.2"
+
+validated = 2026-03-05

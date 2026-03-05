@@ -1,0 +1,16 @@
+name = "pkg-resources"
+ecosystem = "python"
+type = "zombie_shim"
+confidence = 0.90
+
+summary = "Package discovery and resource access runtime stub"
+deprecated = ""
+
+flags = [
+    "zombie_shim: split from setuptools for Debian packaging",
+    "zombie_shim: use importlib.metadata and importlib.resources instead",
+]
+
+replacement = "importlib.metadata + importlib.resources"
+
+validated = 2026-03-05

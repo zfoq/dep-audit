@@ -1,0 +1,7 @@
+[lazy_static]
+module = "std::sync::LazyLock"
+since = "1.80"
+
+[once_cell]
+module = "std::sync::OnceLock"
+since = "1.70"

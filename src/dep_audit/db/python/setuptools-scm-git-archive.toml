@@ -1,0 +1,15 @@
+name = "setuptools-scm-git-archive"
+ecosystem = "python"
+type = "deprecated"
+confidence = 0.90
+
+summary = "Plugin for setuptools_scm to support git archives"
+deprecated = "functionality merged into setuptools-scm"
+
+flags = [
+    "deprecated: functionality merged into setuptools-scm",
+]
+
+replacement = "setuptools-scm"
+
+validated = 2026-03-05

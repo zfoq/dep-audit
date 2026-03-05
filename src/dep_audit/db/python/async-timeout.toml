@@ -1,0 +1,16 @@
+name = "async-timeout"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+summary = "Timeout context manager for asyncio programs"
+deprecated = ""
+
+flags = [
+    "stdlib_backport: asyncio.timeout available since Python 3.11",
+]
+
+replacement = "asyncio.timeout"
+stdlib_since = "3.11"
+
+validated = 2026-03-05

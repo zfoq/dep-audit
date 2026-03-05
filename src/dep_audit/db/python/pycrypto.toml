@@ -1,0 +1,16 @@
+name = "pycrypto"
+ecosystem = "python"
+type = "deprecated"
+confidence = 0.95
+
+summary = "Cryptographic modules for Python"
+deprecated = "pycrypto is unmaintained and has known vulnerabilities"
+
+flags = [
+    "deprecated: unmaintained since 2014",
+    "deprecated: known CVEs, use pycryptodome",
+]
+
+replacement = "pycryptodome"
+
+validated = 2026-03-05

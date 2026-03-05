@@ -1,0 +1,16 @@
+name = "pytz"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+summary = "World timezone definitions, modern and historical"
+deprecated = ""
+
+flags = [
+    "stdlib_backport: zoneinfo available since Python 3.9",
+]
+
+replacement = "zoneinfo"
+stdlib_since = "3.9"
+
+validated = 2026-03-05

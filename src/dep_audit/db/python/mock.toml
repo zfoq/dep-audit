@@ -1,0 +1,16 @@
+name = "mock"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+summary = "Rolling backport of unittest.mock"
+deprecated = ""
+
+flags = [
+    "stdlib_backport: unittest.mock available since Python 3.3",
+]
+
+replacement = "unittest.mock"
+stdlib_since = "3.3"
+
+validated = 2026-03-05

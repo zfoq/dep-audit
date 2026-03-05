@@ -1,0 +1,15 @@
+name = "unittest2"
+ecosystem = "python"
+type = "zombie_shim"
+confidence = 0.95
+
+summary = "Backport of unittest improvements from Python 2.7+"
+deprecated = ""
+
+flags = [
+    "zombie_shim: unittest improvements in stdlib since Python 3.x",
+]
+
+replacement = "unittest"
+
+validated = 2026-03-05

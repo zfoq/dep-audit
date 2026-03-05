@@ -1,0 +1,16 @@
+name = "python-future"
+ecosystem = "python"
+type = "zombie_shim"
+confidence = 0.95
+
+summary = "Clean single-source support for Python 3 and 2"
+deprecated = ""
+
+flags = [
+    "zombie_shim: Python 2/3 compatibility layer",
+    "zombie_shim: alias for the 'future' package",
+]
+
+replacement = "native Python 3 syntax"
+
+validated = 2026-03-05

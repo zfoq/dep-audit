@@ -1,0 +1,16 @@
+name = "six"
+ecosystem = "python"
+type = "zombie_shim"
+confidence = 0.95
+
+summary = "Python 2 and 3 compatibility library"
+deprecated = ""
+
+flags = [
+    "zombie_shim: Python 2 compatibility layer",
+    "zombie_shim: unnecessary on Python 3 only projects",
+]
+
+replacement = "native Python 3 syntax"
+
+validated = 2026-03-05
