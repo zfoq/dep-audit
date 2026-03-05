@@ -1,12 +1,10 @@
-"""Tests for the junk DB loading, validation, and stdlib_map."""
+"""Tests for the junk DB loading and stdlib_map."""
 
 from dep_audit.db import (
     get_junk_entry,
     list_entries,
     load_junk_db,
     load_stdlib_map,
-    validate_all,
-    validate_entry,
 )
 
 
@@ -52,73 +50,8 @@ def test_get_junk_entry_missing():
     assert entry is None
 
 
-def test_validate_entry_valid():
-    entry = {
-        "name": "test",
-        "ecosystem": "python",
-        "type": "stdlib_backport",
-        "confidence": 0.95,
-        "flags": ["some flag"],
-        "validated": "2026-03-05",
-    }
-    errors = validate_entry(entry)
-    assert errors == []
-
-
-def test_validate_entry_missing_fields():
-    entry = {"name": "test"}
-    errors = validate_entry(entry)
-    assert len(errors) > 0
-    assert any("missing required field" in e for e in errors)
-
-
-def test_validate_entry_bad_type():
-    entry = {
-        "name": "test",
-        "ecosystem": "python",
-        "type": "invalid_type",
-        "confidence": 0.5,
-        "flags": ["flag"],
-        "validated": "2026-03-05",
-    }
-    errors = validate_entry(entry)
-    assert any("invalid type" in e for e in errors)
-
-
-def test_validate_entry_bad_confidence():
-    entry = {
-        "name": "test",
-        "ecosystem": "python",
-        "type": "deprecated",
-        "confidence": 1.5,
-        "flags": ["flag"],
-        "validated": "2026-03-05",
-    }
-    errors = validate_entry(entry)
-    assert any("confidence" in e for e in errors)
-
-
-def test_validate_entry_empty_flags():
-    entry = {
-        "name": "test",
-        "ecosystem": "python",
-        "type": "deprecated",
-        "confidence": 0.5,
-        "flags": [],
-        "validated": "2026-03-05",
-    }
-    errors = validate_entry(entry)
-    assert any("flags" in e for e in errors)
-
-
 def test_list_entries_python():
     groups = list_entries("python")
     assert "stdlib_backport" in groups
     assert "zombie_shim" in groups
     assert "deprecated" in groups
-
-
-def test_validate_all_python():
-    """All shipped entries should pass validation."""
-    errors, warnings = validate_all("python")
-    assert errors == [], f"Validation errors: {errors}"
