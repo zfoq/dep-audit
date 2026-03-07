@@ -149,3 +149,34 @@ def test_parse_from_content_pyproject_priority():
 def test_parse_from_content_unknown_ecosystem():
     result = parse_from_content("ruby", {"Gemfile": "gem 'rails'\n"})
     assert result.deps == []
+
+
+# --- Inline ignores ---
+
+
+def test_inline_ignore_in_requirements_txt_content():
+    content = "requests==2.31.0\nsix==1.16.0  # dep-audit: ignore\npytz\n"
+    result = _parse_requirements_txt_content(content, source_label="test")
+    names = {d.name for d in result.deps}
+    # Package is still in deps list
+    assert "six" in names
+    # But recorded as inline_ignore
+    assert "six" in result.inline_ignores
+    # Others are not ignored
+    assert "requests" not in result.inline_ignores
+    assert "pytz" not in result.inline_ignores
+
+
+def test_inline_ignore_filesystem(tmp_path: Path):
+    req = tmp_path / "requirements.txt"
+    req.write_text("requests==2.31.0\nsix==1.16.0  # dep-audit: ignore\n")
+    result = _parse_requirements_txt(req)
+    assert "six" in result.inline_ignores
+    assert "requests" not in result.inline_ignores
+
+
+def test_no_inline_ignores_when_absent(tmp_path: Path):
+    req = tmp_path / "requirements.txt"
+    req.write_text("requests==2.31.0\npytz==2023.3\n")
+    result = _parse_requirements_txt(req)
+    assert result.inline_ignores == set()

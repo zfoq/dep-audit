@@ -151,20 +151,30 @@ def _parse_requirements_txt_content(
     content: str,
     source_label: str = "<remote>",
 ) -> LockfileResult:
-    """Parse requirements.txt from string content."""
+    """Parse requirements.txt from string content.
+
+    Lines annotated with ``# dep-audit: ignore`` are recorded in
+    ``LockfileResult.inline_ignores`` so the scanner can suppress them.
+    """
     deps: list[Dependency] = []
+    inline_ignores: set[str] = set()
+
     for line in content.splitlines():
         line = line.strip()
         if not line or line.startswith("#") or line.startswith("-"):
             continue
-        parts = re.split(r"[<>=!~\[;@]", line)
+        ignored = "# dep-audit: ignore" in line
+        code_part = line.split("#")[0].strip()
+        parts = re.split(r"[<>=!~\[;@]", code_part)
         name = normalize_package_name(parts[0].strip())
-        version_match = re.search(r"==\s*([\d.]+)", line)
+        version_match = re.search(r"==\s*([\d.]+)", code_part)
         version = version_match.group(1) if version_match else ""
         if name:
             deps.append(Dependency(name=name, version=version, is_direct=True, group="default"))
+            if ignored:
+                inline_ignores.add(name)
 
-    return LockfileResult(ecosystem="python", deps=deps, source_file=source_label)
+    return LockfileResult(ecosystem="python", deps=deps, source_file=source_label, inline_ignores=inline_ignores)
 
 
 # ---------------------------------------------------------------------------

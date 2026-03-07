@@ -13,7 +13,7 @@ logger = logging.getLogger("dep_audit")
 def _setup_logging(*, verbose: bool = False, quiet: bool = False) -> None:
     """Configure logging level.
 
-    Default:    INFO  (progress + errors, same as before)
+    Default:    INFO  (progress + errors)
     --verbose:  DEBUG (extra detail)
     --quiet:    WARNING (errors only)
     """
@@ -60,6 +60,10 @@ def main(argv: list[str] | None = None) -> int:
     p_scan.add_argument(
         "--exit-code", action="store_true",
         help="Exit with code 1 if any flagged dependencies are found (for CI)",
+    )
+    p_scan.add_argument(
+        "--ignore", metavar="PKG", action="append", default=[],
+        help="Ignore a package (can be repeated: --ignore six --ignore pytz)",
     )
 
     # --- check ---
@@ -112,11 +116,14 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _cmd_scan(args: argparse.Namespace) -> int:
+    from dep_audit.config import load_config
     from dep_audit.github import is_github_target
     from dep_audit.scanner import format_report, scan, scan_remote
 
     # Route to local or remote scan
     if is_github_target(args.path):
+        cfg: dict = {}
+        ignore: set[str] = set(args.ignore)
         results = scan_remote(
             repo_url=args.path,
             ref=args.ref,
@@ -124,6 +131,7 @@ def _cmd_scan(args: argparse.Namespace) -> int:
             target_version=args.target_version,
             include_dev=args.include_dev,
             offline=args.offline,
+            ignore=ignore,
         )
         if not results:
             logger.error("No supported lockfiles found in the remote repository.")
@@ -133,16 +141,33 @@ def _cmd_scan(args: argparse.Namespace) -> int:
         if not project_root.is_dir():
             logger.error("Error: %s is not a directory", project_root)
             return 1
+
+        cfg = load_config(project_root)
+        # CLI --ignore merges with config ignore list
+        ignore = set(cfg.get("ignore", [])) | set(args.ignore)
+
+        # CLI flags override config; config overrides built-in defaults
+        target_version = args.target_version or cfg.get("target-version")
+        offline = args.offline or bool(cfg.get("offline", False))
+        exit_code = args.exit_code or bool(cfg.get("exit-code", False))
+
+        if ignored := ignore:
+            logger.debug("Ignoring %d package(s): %s", len(ignored), ", ".join(sorted(ignored)))
+
         results = scan(
             project_root=project_root,
-            ecosystem=args.ecosystem,
-            target_version=args.target_version,
+            ecosystem=args.ecosystem or cfg.get("ecosystem"),
+            target_version=target_version,
             include_dev=args.include_dev,
-            offline=args.offline,
+            offline=offline,
+            ignore=ignore,
         )
         if not results:
             logger.error("No supported ecosystems detected.")
             return 1
+
+        # Use effective values for exit-code (remote path uses args directly)
+        args.exit_code = exit_code
 
     has_flagged = False
     for result in results:

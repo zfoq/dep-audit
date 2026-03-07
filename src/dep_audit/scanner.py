@@ -29,6 +29,7 @@ def scan(
     target_version: str | None = None,
     include_dev: bool = False,
     offline: bool = False,
+    ignore: set[str] | None = None,
 ) -> list[ScanResult]:
     """Run a full scan of the project. Returns one ScanResult per ecosystem."""
     project_root = project_root.resolve()
@@ -41,7 +42,7 @@ def scan(
     results: list[ScanResult] = []
     for eco in eco_list:
         tv = target_version or ecosystems.resolve_target_version(eco)
-        result = _scan_ecosystem(project_root, project_name, eco, tv, include_dev, offline)
+        result = _scan_ecosystem(project_root, project_name, eco, tv, include_dev, offline, ignore or set())
         results.append(result)
 
     return results
@@ -54,6 +55,7 @@ def _scan_ecosystem(
     target_version: str,
     include_dev: bool,
     offline: bool,
+    ignore: set[str],
 ) -> ScanResult:
     """Scan a single ecosystem."""
     # 1. Parse lockfile
@@ -81,6 +83,13 @@ def _scan_ecosystem(
         for d in lockfile_result.deps
     ]
     result.classifications = classify_all(ecosystem, packages, target_version, offline)
+
+    # 2b. Apply ignore list (config file + inline # dep-audit: ignore comments)
+    effective_ignore = ignore | lockfile_result.inline_ignores
+    if effective_ignore:
+        result.classifications = [
+            c for c in result.classifications if c.name not in effective_ignore
+        ]
 
     # 3. Build dependency tree (from deps.dev or lockfile)
     result.dependency_tree = _build_dep_tree(lockfile_result, ecosystem, offline)
@@ -137,6 +146,7 @@ def scan_remote(
     target_version: str | None = None,
     include_dev: bool = False,
     offline: bool = False,
+    ignore: set[str] | None = None,
 ) -> list[ScanResult]:
     """Scan a remote GitHub repository by fetching only lockfiles.
 
@@ -199,6 +209,13 @@ def scan_remote(
             for d in lockfile_result.deps
         ]
         result.classifications = classify_all(eco, packages, tv, offline)
+
+        # Apply ignore list
+        effective_ignore = ignore or set()
+        if effective_ignore:
+            result.classifications = [
+                c for c in result.classifications if c.name not in effective_ignore
+            ]
 
         # Build dependency tree
         result.dependency_tree = _build_dep_tree(lockfile_result, eco, offline)

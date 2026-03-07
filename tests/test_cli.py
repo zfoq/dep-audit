@@ -32,7 +32,7 @@ def test_db_show_existing(capsys):
     assert "pytz" in captured.out
 
 
-def test_db_show_missing(capsys):
+def test_db_show_missing():
     ret = main(["db", "show", "nonexistent-xyz"])
     assert ret == 1
 
@@ -73,7 +73,46 @@ def test_db_export_offline(capsys):
     assert "entries" in captured.err or "name =" in captured.out
 
 
-def test_db_export_nonexistent_dir(capsys):
+def test_db_export_nonexistent_dir():
     """db export on a bad path should fail."""
     ret = main(["db", "export", "--discovered", "/nonexistent/path/xyz", "--offline"])
     assert ret == 1
+
+
+def test_scan_with_config_ignore(tmp_path, capsys):
+    """Packages in [tool.dep-audit].ignore should not appear in scan output."""
+    # Write a requirements.txt with a known junk package
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3\n")
+    # Write a pyproject.toml that ignores pytz
+    (tmp_path / "pyproject.toml").write_text('[tool.dep-audit]\nignore = ["pytz"]\n')
+    ret = main(["scan", str(tmp_path), "--offline", "--format", "json"])
+    assert ret == 0
+    captured = capsys.readouterr()
+    import json
+    data = json.loads(captured.out.strip())
+    classified_names = [c["name"] for c in data.get("classifications", [])]
+    assert "pytz" not in classified_names
+
+
+def test_scan_cli_ignore_flag(tmp_path, capsys):
+    """--ignore flag should suppress the named package from scan output."""
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3\n")
+    ret = main(["scan", str(tmp_path), "--offline", "--format", "json", "--ignore", "pytz"])
+    assert ret == 0
+    captured = capsys.readouterr()
+    import json
+    data = json.loads(captured.out.strip())
+    classified_names = [c["name"] for c in data.get("classifications", [])]
+    assert "pytz" not in classified_names
+
+
+def test_scan_inline_ignore_in_requirements(tmp_path, capsys):
+    """Packages with # dep-audit: ignore should be suppressed from scan output."""
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3  # dep-audit: ignore\n")
+    ret = main(["scan", str(tmp_path), "--offline", "--format", "json"])
+    assert ret == 0
+    captured = capsys.readouterr()
+    import json
+    data = json.loads(captured.out.strip())
+    classified_names = [c["name"] for c in data.get("classifications", [])]
+    assert "pytz" not in classified_names

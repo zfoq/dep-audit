@@ -19,3 +19,4 @@ class LockfileResult:
     deps: list[Dependency] = field(default_factory=list)
     source_file: str = ""
     tree_edges: dict[str, list[str]] | None = None
+    inline_ignores: set[str] = field(default_factory=set)  # from # dep-audit: ignore
