@@ -98,7 +98,7 @@ def _scan_ecosystem(
         ]
 
     # 3. Build dependency tree (from deps.dev or lockfile)
-    result.dependency_tree = _build_dep_tree(lockfile_result, ecosystem, offline)
+    result.dependency_tree = _build_dep_tree(lockfile_result)
 
     # 4. Identify packages to scan for usage
     flagged_names = {
@@ -171,6 +171,8 @@ def scan_remote(
     project_name = f"{repo.owner}/{repo.repo}"
 
     if ecosystem:
+        # Single ecosystem: fetch only what's needed (fetch_lockfile_bundle is more
+        # targeted than fetch_all_lockfile_bundles which probes all ecosystems).
         eco_bundles = {ecosystem: fetch_lockfile_bundle(repo, ecosystem)}
     else:
         logger.info("  Fetching lockfiles from %s (%s)...", project_name, repo.ref)
@@ -179,9 +181,15 @@ def scan_remote(
     if not eco_bundles:
         return []
 
+    from dep_audit.config import detect_target_version_from_bundle
+
     results: list[ScanResult] = []
     for eco, bundle in eco_bundles.items():
-        tv = target_version or ecosystems.resolve_target_version(eco)
+        tv = (
+            target_version
+            or detect_target_version_from_bundle(bundle, eco)
+            or ecosystems.resolve_target_version(eco)
+        )
 
         if not bundle:
             logger.warning("  No %s lockfiles found.", eco)
@@ -224,7 +232,7 @@ def scan_remote(
             ]
 
         # Build dependency tree
-        result.dependency_tree = _build_dep_tree(lockfile_result, eco, offline)
+        result.dependency_tree = _build_dep_tree(lockfile_result)
 
         # Skip: usage scanning (no source code)
 
@@ -380,11 +388,7 @@ def _trace_anchors_no_usage(
     return results
 
 
-def _build_dep_tree(
-    lockfile_result: LockfileResult,
-    _ecosystem: str,
-    _offline: bool,
-) -> dict[str, list[str]]:
+def _build_dep_tree(lockfile_result: LockfileResult) -> dict[str, list[str]]:
     """Build a dependency tree from lockfile data.
 
     If the lockfile was enriched with deps.dev data (via _resolve_transitive_deps),

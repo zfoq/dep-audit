@@ -21,9 +21,14 @@ CLI flags always override config and auto-detected values.
 from __future__ import annotations
 
 import json
+import logging
 import re
 import tomllib
 from pathlib import Path
+
+logger = logging.getLogger("dep_audit")
+
+_KNOWN_KEYS = frozenset({"ignore", "target-version", "ecosystem", "offline", "exit-code"})
 
 
 def load_config(project_root: Path) -> dict:
@@ -36,9 +41,14 @@ def load_config(project_root: Path) -> dict:
     standalone = project_root / ".dep-audit.toml"
     if standalone.exists():
         try:
-            return tomllib.loads(standalone.read_text(encoding="utf-8"))
-        except Exception:
+            cfg = tomllib.loads(standalone.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.warning("Could not parse .dep-audit.toml: %s", e)
             return {}
+        for key in cfg:
+            if key not in _KNOWN_KEYS:
+                logger.warning("Unknown dep-audit config key %r (ignored)", key)
+        return cfg
 
     # 2. pyproject.toml — Python projects
     pyproject = project_root / "pyproject.toml"
@@ -47,10 +57,14 @@ def load_config(project_root: Path) -> dict:
 
     try:
         data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
-    except Exception:
+    except Exception as e:
+        logger.warning("Could not parse pyproject.toml: %s", e)
         return {}
 
     cfg: dict = dict(data.get("tool", {}).get("dep-audit", {}))
+    for key in cfg:
+        if key not in _KNOWN_KEYS:
+            logger.warning("Unknown dep-audit config key %r (ignored)", key)
 
     # Auto-detect Python target version from requires-python when not explicit
     if "target-version" not in cfg:
@@ -61,6 +75,46 @@ def load_config(project_root: Path) -> dict:
                 cfg["target-version"] = m.group(1)
 
     return cfg
+
+
+def detect_target_version_from_bundle(bundle: dict[str, str], ecosystem: str) -> str | None:
+    """Auto-detect target version from in-memory file bundle (remote scans).
+
+    Same logic as detect_target_version but works on fetched file contents
+    instead of reading from disk. Returns None if version can't be determined.
+    """
+    if ecosystem == "cargo":
+        content = bundle.get("Cargo.toml", "")
+        if not content:
+            return None
+        try:
+            data = tomllib.loads(content)
+        except Exception:
+            return None
+        version = data.get("package", {}).get("rust-version", "")
+        if not version:
+            return None
+        m = re.search(r"(\d+\.\d+)", str(version))
+        return m.group(1) if m else None
+
+    if ecosystem == "npm":
+        content = bundle.get("package.json", "")
+        if not content:
+            return None
+        try:
+            data = json.loads(content)
+        except Exception:
+            return None
+        node_range = data.get("engines", {}).get("node", "")
+        if not node_range:
+            return None
+        m = re.search(r"(\d+\.\d+|\d+)", str(node_range))
+        if not m:
+            return None
+        version = m.group(1)
+        return version if "." in version else f"{version}.0"
+
+    return None
 
 
 def detect_target_version(project_root: Path, ecosystem: str) -> str | None:
