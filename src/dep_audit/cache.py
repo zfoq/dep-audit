@@ -35,7 +35,7 @@ def get(namespace: str, key: str, ttl: int = TTL_METADATA) -> dict | None:
     p = _key_path(namespace, key)
     if not p.exists():
         return None
-    age = time.time() - p.stat().st_mtime
+    age = max(0.0, time.time() - p.stat().st_mtime)
     if age >= ttl:
         return None
     try:

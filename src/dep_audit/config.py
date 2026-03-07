@@ -43,14 +43,14 @@ def load_config(project_root: Path) -> dict:
     standalone = project_root / ".dep-audit.toml"
     if standalone.exists():
         try:
-            cfg = tomllib.loads(standalone.read_text(encoding="utf-8"))
+            standalone_cfg = tomllib.loads(standalone.read_text(encoding="utf-8"))
         except Exception as e:
             logger.warning("Could not parse .dep-audit.toml: %s", e)
             return {}
-        for key in cfg:
+        for key in standalone_cfg:
             if key not in _KNOWN_KEYS:
                 logger.warning("Unknown dep-audit config key %r (ignored)", key)
-        return cfg
+        return standalone_cfg
 
     # 2. pyproject.toml — Python projects
     pyproject = project_root / "pyproject.toml"
