@@ -36,7 +36,7 @@ def get(namespace: str, key: str, ttl: int = TTL_METADATA) -> dict | None:
     if not p.exists():
         return None
     age = time.time() - p.stat().st_mtime
-    if age > ttl:
+    if age >= ttl:
         return None
     try:
         return json.loads(p.read_text(encoding="utf-8"))
