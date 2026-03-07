@@ -79,7 +79,7 @@ def test_format_toml_entry_deprecated():
     toml = format_toml_entry(c, "python")
     assert 'type = "deprecated"' in toml
     assert 'replacement = "new-pkg"' in toml
-    assert "stdlib_since" not in toml
+    assert "stdlib_since =" not in toml
 
 
 def test_format_toml_entry_escapes_quotes():

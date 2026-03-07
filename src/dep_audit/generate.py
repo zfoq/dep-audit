@@ -40,6 +40,7 @@ def format_toml_entry(c: Classification, ecosystem: str) -> str:
     today = datetime.date.today().isoformat()
 
     lines: list[str] = []
+    lines.append("# STUB: auto-generated — review replacement, stdlib_since, and flags before committing")
     lines.append(f'name = "{c.name}"')
     lines.append(f'ecosystem = "{ecosystem}"')
     lines.append(f'type = "{c.classification}"')

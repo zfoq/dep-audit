@@ -197,9 +197,11 @@ def _walk_javascript_files(root: Path, exclude_dirs: set[str]):
     if not root.is_dir():
         return
     for item in root.rglob("*"):
-        if item.suffix not in _JS_EXTENSIONS or not item.is_file():
+        if item.suffix not in _JS_EXTENSIONS:
             continue
         if any(p in exclude_dirs for p in item.relative_to(root).parts[:-1]):
+            continue
+        if not item.is_file():
             continue
         yield item
 
