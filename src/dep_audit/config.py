@@ -63,7 +63,7 @@ def load_config(project_root: Path) -> dict:
         logger.warning("Could not parse pyproject.toml: %s", e)
         return {}
 
-    cfg: dict = dict(data.get("tool", {}).get("dep-audit", {}))
+    cfg = dict(data.get("tool", {}).get("dep-audit", {}))
     for key in cfg:
         if key not in _KNOWN_KEYS:
             logger.warning("Unknown dep-audit config key %r (ignored)", key)
