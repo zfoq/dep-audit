@@ -86,24 +86,6 @@ def main(argv: list[str] | None = None) -> int:
     p_db_export.add_argument("--ref", default="HEAD", help="Git ref for remote repos")
     p_db_export.add_argument("--offline", action="store_true", help="Skip deps.dev API calls")
 
-    # --- scan-list ---
-    p_scan_list = sub.add_parser("scan-list", help="Batch scan repos from a TOML file")
-    p_scan_list.add_argument("file", help="TOML file with [[repos]] entries")
-    p_scan_list.add_argument("--format", choices=["terminal", "json", "markdown"], default="terminal")
-    p_scan_list.add_argument("--target-version", help="Language version the project targets")
-    p_scan_list.add_argument("--offline", action="store_true", help="Skip deps.dev API calls")
-    p_scan_list.add_argument("--repo", help="Only scan this repo (e.g. fastapi/fastapi)")
-    p_scan_list.add_argument("--ref", default=None, help="Override git ref for the targeted repo")
-    p_scan_list.add_argument("--discover", action="store_true", help="Auto-discover new junk DB entries")
-    p_scan_list.add_argument(
-        "--no-write", action="store_true",
-        help="Don't write results back to the TOML file",
-    )
-    p_scan_list.add_argument(
-        "--exit-code", action="store_true",
-        help="Exit with code 1 if any flagged dependencies are found (for CI)",
-    )
-
     # --- cache ---
     p_cache = sub.add_parser("cache", help="Cache management")
     cache_sub = p_cache.add_subparsers(dest="cache_command")
@@ -118,8 +100,6 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "scan":
         return _cmd_scan(args)
-    elif args.command == "scan-list":
-        return _cmd_scan_list(args)
     elif args.command == "check":
         return _cmd_check(args)
     elif args.command == "db":
@@ -174,11 +154,6 @@ def _cmd_scan(args: argparse.Namespace) -> int:
     if args.exit_code and has_flagged:
         return 1
     return 0
-
-
-def _cmd_scan_list(args: argparse.Namespace) -> int:
-    from dep_audit.scan_list import cmd_scan_list
-    return cmd_scan_list(args)
 
 
 def _cmd_check(args: argparse.Namespace) -> int:

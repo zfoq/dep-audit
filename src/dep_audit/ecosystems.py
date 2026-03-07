@@ -3,7 +3,7 @@
 Every ecosystem-specific dispatch point in the codebase queries this registry
 instead of maintaining its own hardcoded dict/if-chain.  Adding a new ecosystem
 (e.g. Cargo) means: create one EcosystemConfig + one parser module.  Zero
-changes to scanner, CLI, github, report, or scan_list.
+changes to scanner, CLI, github, or report.
 """
 
 from __future__ import annotations

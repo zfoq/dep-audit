@@ -110,37 +110,6 @@ dep-audit db export --discovered .                   # print TOML to stdout
 dep-audit db export --discovered fastapi/fastapi     # from remote repo
 ```
 
-### `scan-list`
-
-Batch scan multiple repos from a TOML config file.
-
-```bash
-dep-audit scan-list repos.toml                    # terminal table
-dep-audit scan-list repos.toml --format markdown  # markdown table
-dep-audit scan-list repos.toml --format json      # structured JSON
-
-# Auto-discover new junk DB entries across all repos
-dep-audit scan-list repos.toml --discover
-```
-
-The config file uses `[[repos]]` entries:
-
-```toml
-[[repos]]
-name = "FastAPI"
-repo = "fastapi/fastapi"
-ecosystem = "python"
-
-[[repos]]
-name = "Django"
-repo = "django/django"
-ecosystem = "python"
-ref = "stable/5.1.x"
-target_version = "3.10"
-```
-
-Per-entry `ref` and `target_version` can be overridden via CLI flags `--ref` and `--target-version`.
-
 ### `cache`
 
 Manage the local API response cache (`~/.cache/dep-audit/`).
@@ -181,13 +150,6 @@ jobs:
       - run: uvx dep-audit scan . --exit-code --offline
 ```
 
-### Batch scanning in CI
-
-```bash
-# Scan repos without writing results back to the TOML file
-dep-audit scan-list repos.toml --no-write --exit-code
-```
-
 ## Architecture
 
 ```
@@ -209,7 +171,6 @@ src/dep_audit/
 ├── db.py            # TOML junk database loader
 ├── generate.py      # Discovery pipeline + TOML export
 ├── report.py        # Terminal and JSON formatters
-├── scan_list.py     # Batch scan-list command
 ├── cache.py         # File-based JSON cache
 ├── db/              # Pre-seeded junk database
 │   ├── python/      # 25 entries
@@ -240,9 +201,7 @@ dep-audit can automatically discover new packages that should be in the junk dat
 ```bash
 # Preview what would be added
 dep-audit db export --discovered fastapi/fastapi
-
-# Batch discovery across multiple repos
-dep-audit scan-list repos.toml --discover
+dep-audit db export --discovered django/django
 ```
 
 ## Development
