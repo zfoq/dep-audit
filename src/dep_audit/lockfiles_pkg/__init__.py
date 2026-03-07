@@ -17,6 +17,7 @@ from pathlib import Path
 from dep_audit.lockfiles_pkg._types import Dependency, LockfileResult
 from dep_audit.lockfiles_pkg._util import normalize_package_name
 from dep_audit.lockfiles_pkg.cargo import parse_cargo
+from dep_audit.lockfiles_pkg.go import parse_go
 from dep_audit.lockfiles_pkg.npm import parse_npm
 from dep_audit.lockfiles_pkg.python import parse_python
 
@@ -27,6 +28,7 @@ __all__ = [
     "parse",
     "parse_from_content",
     "parse_cargo",
+    "parse_go",
     "parse_npm",
     "parse_python",
 ]

@@ -1,0 +1,14 @@
+name = "github.com/hashicorp/go-multierror"
+ecosystem = "go"
+type = "stdlib_backport"
+confidence = 0.75
+
+replacement = "errors.Join"
+stdlib_since = "1.20"
+
+flags = [
+    "stdlib_backport: errors.Join combines multiple errors since Go 1.20",
+    "note: go-multierror formats errors differently; check output format before migrating",
+]
+
+validated = 2026-03-07

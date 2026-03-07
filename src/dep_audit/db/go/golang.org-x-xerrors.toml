@@ -1,0 +1,14 @@
+name = "golang.org/x/xerrors"
+ecosystem = "go"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "errors + fmt.Errorf %w"
+stdlib_since = "1.13"
+
+flags = [
+    "stdlib_backport: xerrors was a prototype for Go 1.13 error handling",
+    "stdlib_backport: errors.Is, errors.As, and fmt.Errorf %w are now stdlib",
+]
+
+validated = 2026-03-07

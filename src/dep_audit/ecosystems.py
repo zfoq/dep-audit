@@ -108,9 +108,10 @@ def _python_target_version() -> str:
 
 def _register_builtins() -> None:
     from dep_audit.lockfiles_pkg.cargo import _parse_cargo_from_content, parse_cargo
+    from dep_audit.lockfiles_pkg.go import _parse_go_from_content, parse_go
     from dep_audit.lockfiles_pkg.npm import _parse_npm_from_content, parse_npm
     from dep_audit.lockfiles_pkg.python import _parse_python_from_content, parse_python
-    from dep_audit.usage import scan_javascript_imports, scan_python_imports, scan_rust_imports
+    from dep_audit.usage import scan_go_imports, scan_javascript_imports, scan_python_imports, scan_rust_imports
 
     register(EcosystemConfig(
         name="python",
@@ -170,6 +171,21 @@ def _register_builtins() -> None:
         parse=parse_cargo,
         parse_from_content=_parse_cargo_from_content,
         scan_imports=scan_rust_imports,
+    ))
+
+    register(EcosystemConfig(
+        name="go",
+        system_name="go",
+        display_name="Go",
+        default_target_version="1.21",
+        markers=("go.mod", "go.sum"),
+        lockfiles=(
+            LockfileSpec("go.mod"),
+        ),
+        full_lockfile_names=frozenset({"go.mod"}),
+        parse=parse_go,
+        parse_from_content=_parse_go_from_content,
+        scan_imports=scan_go_imports,
     ))
 
 
