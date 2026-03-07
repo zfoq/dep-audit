@@ -16,6 +16,7 @@ jobs:
           python-version: "3.13"
       - run: uv sync --group dev
       - run: uv run ruff check src/
+      - run: uv run mypy src/
 
   test:
     runs-on: ${{ matrix.os }}
