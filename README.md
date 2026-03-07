@@ -6,13 +6,13 @@ A CLI tool that identifies unnecessary dependencies in software projects. It ans
 
 | Category | Examples |
 |---|---|
-| **Stdlib backports** | `pytz` → `zoneinfo`, `tomli` → `tomllib`, `lazy-static` → `std::sync::LazyLock` |
+| **Stdlib backports** | `pytz` → `zoneinfo`, `tomli` → `tomllib`, `lazy-static` → `std::sync::LazyLock`, `go.uber.org/atomic` → `sync/atomic` |
 | **Zombie shims** | `six`, `future` — Python 2/3 compat layers; `winapi` → `windows-sys` |
-| **Deprecated packages** | `pycrypto` → `pycryptodome`, `failure` → `thiserror + anyhow`, `request` (npm) |
+| **Deprecated packages** | `pycrypto` → `pycryptodome`, `failure` → `thiserror + anyhow`, `request` (npm), `github.com/dgrijalva/jwt-go` → `golang-jwt/jwt` |
 | **Micro-utilities** | `is-odd`, `is-even`, `left-pad` — single expressions in native code |
 | **Unused dependencies** | Packages in your lockfile that are never imported in your source code |
 
-Supports **Python**, **npm/Node.js**, and **Cargo/Rust**.
+Supports **Python**, **npm/Node.js**, **Cargo/Rust**, and **Go**.
 
 ## Install
 
@@ -47,6 +47,7 @@ dep-audit scan django/django --ref stable/5.1.x
 dep-audit check pytz
 dep-audit check lazy-static --ecosystem cargo
 dep-audit check left-pad --ecosystem npm --offline
+dep-audit check github.com/pkg/errors --ecosystem go
 ```
 
 ## Ecosystems
@@ -56,6 +57,7 @@ dep-audit check left-pad --ecosystem npm --offline
 | **Python** | `pyproject.toml`, `requirements.txt`, `setup.py` | uv.lock, poetry.lock, pyproject.toml, requirements.txt |
 | **npm** | `package.json` | package-lock.json, yarn.lock, pnpm-lock.yaml, package.json |
 | **Cargo** | `Cargo.toml` | Cargo.lock, Cargo.toml |
+| **Go** | `go.mod` | go.mod |
 
 dep-audit detects the ecosystem automatically. In multi-language repos it scans each detected ecosystem separately.
 
@@ -228,8 +230,9 @@ min-confidence = 0.8                      # only fail CI on findings >= this con
 | Python | `requires-python` in `pyproject.toml` | `>=3.11` → `3.11` |
 | Rust | `package.rust-version` in `Cargo.toml` | `1.70` |
 | npm | `engines.node` in `package.json` | `>=18.0.0` → `18.0` |
+| Go | `go` directive in `go.mod` | `go 1.21` → `1.21` |
 
-If the field is absent, dep-audit falls back to a safe default (Python: running interpreter, Rust: 1.80, Node: 22).
+If the field is absent, dep-audit falls back to a safe default (Python: running interpreter, Rust: 1.80, Node: 22, Go: 1.21).
 
 ### Inline ignores
 
@@ -349,7 +352,7 @@ dep-audit is a [pre-commit](https://pre-commit.com/) plugin. Add it to `.pre-com
 ```yaml
 repos:
   - repo: https://github.com/zfoq/dep-audit
-    rev: 0.4.2
+    rev: 0.5.0
     hooks:
       - id: dep-audit
 ```
@@ -406,9 +409,28 @@ dep-audit scan ./crates/my-crate
 dep-audit scan ./tokio          # inside a tokio-style workspace
 ```
 
+## Go modules
+
+Go module paths contain slashes (e.g. `github.com/pkg/errors`). Use the full module path when checking a single package:
+
+```bash
+dep-audit check github.com/pkg/errors --ecosystem go
+dep-audit check github.com/dgrijalva/jwt-go --ecosystem go
+dep-audit db show github.com/gogo/protobuf --ecosystem go
+```
+
+For multi-module repos, point dep-audit at the directory that contains the relevant `go.mod`:
+
+```bash
+dep-audit scan .                        # top-level go.mod
+dep-audit scan ./cmd/myservice          # sub-module with its own go.mod
+```
+
+Import scanning walks all `.go` files under the project root, excluding `vendor/` and `testdata/` automatically.
+
 ## Junk database
 
-The database covers 121 packages across all ecosystems (Python: 43, npm: 57, Cargo: 21). Each entry is a TOML file in `src/dep_audit/db/{ecosystem}/`:
+The database covers 141 packages across all ecosystems (Python: 43, npm: 57, Cargo: 21, Go: 20). Each entry is a TOML file in `src/dep_audit/db/{ecosystem}/`:
 
 ```toml
 name        = "pytz"
