@@ -62,28 +62,28 @@ def _fetch(url: str, cache_key: str, ttl: int = cache.TTL_METADATA) -> dict | No
 
 def get_package(ecosystem: str, name: str) -> dict | None:
     """Get package info (versions list)."""
-    sys = system_name(ecosystem)
+    sys_name = system_name(ecosystem)
     encoded = urllib.parse.quote(name, safe="")
-    url = f"{_BASE}/systems/{sys}/packages/{encoded}"
-    return _fetch(url, f"{sys}-{name}-pkg")
+    url = f"{_BASE}/systems/{sys_name}/packages/{encoded}"
+    return _fetch(url, f"{sys_name}-{name}-pkg")
 
 
 def get_version(ecosystem: str, name: str, version: str) -> dict | None:
     """Get version-specific metadata."""
-    sys = system_name(ecosystem)
+    sys_name = system_name(ecosystem)
     encoded_name = urllib.parse.quote(name, safe="")
     encoded_ver = urllib.parse.quote(version, safe="")
-    url = f"{_BASE}/systems/{sys}/packages/{encoded_name}/versions/{encoded_ver}"
-    return _fetch(url, f"{sys}-{name}-{version}")
+    url = f"{_BASE}/systems/{sys_name}/packages/{encoded_name}/versions/{encoded_ver}"
+    return _fetch(url, f"{sys_name}-{name}-{version}")
 
 
 def get_dependencies(ecosystem: str, name: str, version: str) -> dict | None:
     """Get dependency tree for a specific version."""
-    sys = system_name(ecosystem)
+    sys_name = system_name(ecosystem)
     encoded_name = urllib.parse.quote(name, safe="")
     encoded_ver = urllib.parse.quote(version, safe="")
-    url = f"{_BASE}/systems/{sys}/packages/{encoded_name}/versions/{encoded_ver}:dependencies"
-    return _fetch(url, f"{sys}-{name}-{version}-deps")
+    url = f"{_BASE}/systems/{sys_name}/packages/{encoded_name}/versions/{encoded_ver}:dependencies"
+    return _fetch(url, f"{sys_name}-{name}-{version}-deps")
 
 
 def is_deprecated(ecosystem: str, name: str, version: str) -> tuple[bool, str]:

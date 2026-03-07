@@ -51,7 +51,7 @@ def _parse_cargo_lock_content(
         if source is None:
             # Still record their dependencies for tree_edges
             dep_list = package.get("dependencies", [])
-            _record_tree_edges(tree_edges, name, dep_list)
+            _record_tree_edges(tree_edges, normalize_package_name(name), dep_list)
             continue
 
         norm = normalize_package_name(name)

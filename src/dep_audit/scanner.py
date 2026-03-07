@@ -13,7 +13,7 @@ from pathlib import Path
 from dep_audit import ecosystems
 from dep_audit.anchors import AnchorResult, trace_anchors
 from dep_audit.classify import classify_all
-from dep_audit.lockfiles import LockfileResult, parse
+from dep_audit.lockfiles_pkg import LockfileResult, parse
 from dep_audit.report import json_report, terminal_report
 from dep_audit.types import ScanResult
 
@@ -83,12 +83,16 @@ def _scan_ecosystem(
         lockfile_result = _resolve_transitive_deps(lockfile_result, ecosystem)
         result.lockfile_result = lockfile_result
 
-    # 2. Classify all production packages
+    # 2. Load junk DB once — used for both classification and anchor tracing
+    from dep_audit.db import load_junk_db
+    junk_db = load_junk_db(ecosystem)
+
+    # 2a. Classify all production packages
     packages = [
         {"name": d.name, "version": d.version, "is_direct": d.is_direct}
         for d in lockfile_result.deps
     ]
-    result.classifications = classify_all(ecosystem, packages, target_version, offline)
+    result.classifications = classify_all(ecosystem, packages, target_version, offline, junk_db=junk_db)
 
     # 2b. Apply ignore list (config file + inline # dep-audit: ignore comments)
     effective_ignore = ignore | lockfile_result.inline_ignores
@@ -115,13 +119,11 @@ def _scan_ecosystem(
 
     # 6. Trace anchors for flagged packages
     from dep_audit.anchors import classify_anchor
-    from dep_audit.db import load_junk_db
 
     flagged_transitive = [
         c.name for c in result.classifications
         if c.classification != "ok" and not c.is_direct
     ]
-    junk_db = load_junk_db(ecosystem)
 
     if flagged_transitive:
         result.anchors = trace_anchors(
@@ -159,7 +161,7 @@ def scan_remote(
     No source code is downloaded, so usage scanning is skipped.
     """
     from dep_audit.github import fetch_all_lockfile_bundles, fetch_lockfile_bundle, parse_github_url
-    from dep_audit.lockfiles import parse_from_content
+    from dep_audit.lockfiles_pkg import parse_from_content
 
     repo = parse_github_url(repo_url)
     if repo is None:
@@ -224,8 +226,8 @@ def scan_remote(
         ]
         result.classifications = classify_all(eco, packages, tv, offline)
 
-        # Apply ignore list
-        effective_ignore = ignore or set()
+        # Apply ignore list (config + inline # dep-audit: ignore comments)
+        effective_ignore = (ignore or set()) | lockfile_result.inline_ignores
         if effective_ignore:
             result.classifications = [
                 c for c in result.classifications if c.name not in effective_ignore
@@ -280,7 +282,7 @@ def _resolve_transitive_deps(
     pulled in by something you do depend on.
     """
     from dep_audit import depsdev
-    from dep_audit.lockfiles import Dependency, normalize_package_name
+    from dep_audit.lockfiles_pkg import Dependency, normalize_package_name
 
     known: dict[str, Dependency] = {d.name: d for d in lockfile_result.deps}
     # Track parent→child edges for anchor tracing

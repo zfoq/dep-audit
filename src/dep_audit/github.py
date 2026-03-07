@@ -19,6 +19,7 @@ logger = logging.getLogger("dep_audit")
 
 _RAW_BASE = "https://raw.githubusercontent.com"
 _TTL_REMOTE = 3600  # 1 hour — lockfiles don't change that often
+_RETRY_BACKOFF = (1.0, 3.0)
 
 
 @dataclass
@@ -87,7 +88,7 @@ def fetch_file(repo: RepoRef, path: str) -> str | None:
             if e.code == 404:
                 return None
             if e.code == 429 and attempt < 2:
-                delay = (1.0, 3.0)[attempt]
+                delay = _RETRY_BACKOFF[attempt]
                 logger.debug("Rate limited by GitHub, retrying in %.0fs...", delay)
                 time.sleep(delay)
                 continue

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import textwrap
 
-from dep_audit.lockfiles import parse_from_content, parse_npm
+from dep_audit.lockfiles_pkg import parse_from_content, parse_npm
 from dep_audit.lockfiles_pkg.npm import (
     _parse_package_json_content,
     _parse_package_lock_json_content,

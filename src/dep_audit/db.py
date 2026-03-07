@@ -50,9 +50,9 @@ def get_junk_entry(ecosystem: str, package: str) -> dict | None:
 
 def list_entries(ecosystem: str) -> dict[str, list[str]]:
     """Group entries by type. Returns {type: [name, ...]}."""
-    db = load_junk_db(ecosystem)
+    junk_db = load_junk_db(ecosystem)
     groups: dict[str, list[str]] = {}
-    for name, entry in db.items():
+    for name, entry in junk_db.items():
         t = entry.get("type", "unknown")
         groups.setdefault(t, []).append(name)
     return groups

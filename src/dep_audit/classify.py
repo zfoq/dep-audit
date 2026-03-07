@@ -23,7 +23,6 @@ class Classification:
     stdlib_since: str = ""
     is_direct: bool = True
     flags: list[str] = field(default_factory=list)
-    deps_dev_data: dict[str, Any] = field(default_factory=dict)
 
 
 def classify_package(
@@ -77,9 +76,11 @@ def classify_all(
     packages: list[dict[str, Any]],
     target_version: str,
     offline: bool = False,
+    junk_db: dict[str, dict] | None = None,
 ) -> list[Classification]:
     """Classify a list of packages."""
-    junk_db = db.load_junk_db(ecosystem)
+    if junk_db is None:
+        junk_db = db.load_junk_db(ecosystem)
 
     results: list[Classification] = []
     for pkg in packages:
