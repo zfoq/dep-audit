@@ -1,0 +1,13 @@
+name = "object.getownpropertydescriptors"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "Object.getOwnPropertyDescriptors()"
+stdlib_since = "7.0"
+
+flags = [
+    "stdlib_backport: Object.getOwnPropertyDescriptors() available since Node 7 / ES2017",
+]
+
+validated = 2026-03-07

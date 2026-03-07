@@ -1,0 +1,14 @@
+name = "hermit-abi"
+ecosystem = "cargo"
+type = "stdlib_backport"
+confidence = 0.60
+
+replacement = "std (hermit target support)"
+stdlib_since = "1.70"
+
+flags = [
+    "stdlib_backport: hermit target support integrated into std since Rust 1.70",
+    "low-level ABI crate rarely needed directly by application code",
+]
+
+validated = 2026-03-07

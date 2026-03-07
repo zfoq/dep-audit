@@ -1,0 +1,13 @@
+name = "monotonic"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "time.monotonic"
+stdlib_since = "3.3"
+
+flags = [
+    "stdlib_backport: time.monotonic() available since Python 3.3",
+]
+
+validated = 2026-03-07

@@ -1,4 +1,4 @@
-"""Load the TOML junk database and stdlib_map."""
+"""Load the TOML junk database."""
 
 from __future__ import annotations
 
@@ -10,16 +10,6 @@ logger = logging.getLogger("dep_audit")
 
 _PACKAGE_DIR = Path(__file__).resolve().parent
 _DB_DIR = _PACKAGE_DIR / "db"
-_STDLIB_MAP_DIR = _PACKAGE_DIR / "stdlib_map"
-
-
-def load_stdlib_map(ecosystem: str) -> dict[str, dict]:
-    """Load stdlib_map/{ecosystem}.toml and return {pkg_name: {module, since, ...}}."""
-    p = _STDLIB_MAP_DIR / f"{ecosystem}.toml"
-    if not p.exists():
-        return {}
-    with open(p, "rb") as f:
-        return tomllib.load(f)
 
 
 def load_junk_db(ecosystem: str) -> dict[str, dict]:

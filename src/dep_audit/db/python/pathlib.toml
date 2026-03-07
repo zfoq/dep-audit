@@ -1,0 +1,13 @@
+name = "pathlib"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "pathlib"
+stdlib_since = "3.4"
+
+flags = [
+    "stdlib_backport: pathlib module available since Python 3.4",
+]
+
+validated = 2026-03-07

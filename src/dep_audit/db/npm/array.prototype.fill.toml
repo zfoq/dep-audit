@@ -1,0 +1,13 @@
+name = "array.prototype.fill"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "Array.prototype.fill()"
+stdlib_since = "4.0"
+
+flags = [
+    "stdlib_backport: Array.prototype.fill() available since Node 4 / ES2015",
+]
+
+validated = 2026-03-07

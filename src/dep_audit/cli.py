@@ -185,15 +185,14 @@ def _cmd_check(args: argparse.Namespace) -> int:
     from dep_audit import depsdev
     from dep_audit import ecosystems as eco_mod
     from dep_audit.classify import classify_package
-    from dep_audit.db import load_junk_db, load_stdlib_map
+    from dep_audit.db import load_junk_db
 
     name = args.package
     ecosystem = args.ecosystem
     target_version = args.target_version or eco_mod.resolve_target_version(ecosystem)
 
     junk_db = load_junk_db(ecosystem)
-    stdlib_map = load_stdlib_map(ecosystem)
-    c = classify_package(ecosystem, name, "", target_version, True, junk_db, stdlib_map)
+    c = classify_package(ecosystem, name, "", target_version, True, junk_db)
 
     print()
     if c.classification != "ok":
@@ -336,6 +335,13 @@ def _cmd_db_export(args: argparse.Namespace) -> int:
         logger.info("  No new entries discovered.")
     else:
         logger.info("\n  %d entries found.", total_discovered)
+        logger.info(
+            "\n  NOTE: each block above is a separate TOML file, not one combined document.\n"
+            "  TOML has no multi-document separator, so the combined output is not valid TOML.\n"
+            "  Save each # --- <name> --- block as its own file:\n"
+            "    src/dep_audit/db/%s/<name>.toml",
+            ecosystem,
+        )
 
     return 0
 

@@ -1,0 +1,13 @@
+name = "number.issafeinteger"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "Number.isSafeInteger()"
+stdlib_since = "1.0"
+
+flags = [
+    "stdlib_backport: Number.isSafeInteger() available since Node 1 / ES2015",
+]
+
+validated = 2026-03-07

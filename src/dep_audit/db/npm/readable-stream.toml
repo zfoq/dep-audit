@@ -1,0 +1,14 @@
+name = "readable-stream"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.60
+
+replacement = "stream"
+stdlib_since = "10.0"
+
+flags = [
+    "stdlib_backport: stream module available since Node 10",
+    "readable-stream adds backcompat across older Node versions; remove if targeting Node 10+",
+]
+
+validated = 2026-03-07

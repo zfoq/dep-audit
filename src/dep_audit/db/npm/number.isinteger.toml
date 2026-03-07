@@ -1,0 +1,13 @@
+name = "number.isinteger"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "Number.isInteger()"
+stdlib_since = "1.0"
+
+flags = [
+    "stdlib_backport: Number.isInteger() available since Node 1 / ES2015",
+]
+
+validated = 2026-03-07

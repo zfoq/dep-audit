@@ -1,0 +1,13 @@
+name = "backports.functools-lru-cache"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "functools.lru_cache"
+stdlib_since = "3.2"
+
+flags = [
+    "stdlib_backport: functools.lru_cache available since Python 3.2",
+]
+
+validated = 2026-03-07

@@ -1,0 +1,13 @@
+name = "string.prototype.matchall"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "String.prototype.matchAll()"
+stdlib_since = "12.0"
+
+flags = [
+    "stdlib_backport: String.prototype.matchAll() available since Node 12 / ES2020",
+]
+
+validated = 2026-03-07

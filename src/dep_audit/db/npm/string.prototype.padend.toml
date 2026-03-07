@@ -1,0 +1,13 @@
+name = "string.prototype.padend"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "String.prototype.padEnd()"
+stdlib_since = "8.0"
+
+flags = [
+    "stdlib_backport: String.prototype.padEnd() available since Node 8 / ES2017",
+]
+
+validated = 2026-03-07

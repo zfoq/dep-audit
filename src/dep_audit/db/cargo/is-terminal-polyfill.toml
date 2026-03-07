@@ -1,0 +1,14 @@
+name = "is-terminal-polyfill"
+ecosystem = "cargo"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "std::io::IsTerminal"
+stdlib_since = "1.70"
+
+flags = [
+    "stdlib_backport: std::io::IsTerminal available since Rust 1.70",
+    "is-terminal-polyfill was created specifically to polyfill std::io::IsTerminal",
+]
+
+validated = 2026-03-07

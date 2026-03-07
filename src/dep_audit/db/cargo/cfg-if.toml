@@ -1,0 +1,14 @@
+name = "cfg-if"
+ecosystem = "cargo"
+type = "stdlib_backport"
+confidence = 0.60
+
+replacement = "cfg! macro"
+stdlib_since = "1.0"
+
+flags = [
+    "stdlib_backport: cfg! macro is always available in std",
+    "cfg-if wraps cfg! for complex conditional compilation; std cfg! covers most cases",
+]
+
+validated = 2026-03-07

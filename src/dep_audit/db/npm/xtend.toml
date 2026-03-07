@@ -1,0 +1,13 @@
+name = "xtend"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "Object.assign()"
+stdlib_since = "4.0"
+
+flags = [
+    "stdlib_backport: Object.assign() available since Node 4 / ES2015",
+]
+
+validated = 2026-03-07

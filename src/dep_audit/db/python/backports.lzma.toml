@@ -1,0 +1,13 @@
+name = "backports.lzma"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "lzma"
+stdlib_since = "3.3"
+
+flags = [
+    "stdlib_backport: lzma module available since Python 3.3",
+]
+
+validated = 2026-03-07

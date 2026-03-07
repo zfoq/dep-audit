@@ -1,0 +1,13 @@
+name = "es6-promise"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "Promise"
+stdlib_since = "4.0"
+
+flags = [
+    "stdlib_backport: native Promise available since Node 4 LTS",
+]
+
+validated = 2026-03-07

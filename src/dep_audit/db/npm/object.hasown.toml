@@ -1,0 +1,13 @@
+name = "object.hasown"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "Object.hasOwn()"
+stdlib_since = "16.9"
+
+flags = [
+    "stdlib_backport: Object.hasOwn() available since Node 16.9 / ES2022",
+]
+
+validated = 2026-03-07

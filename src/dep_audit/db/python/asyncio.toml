@@ -1,0 +1,14 @@
+name = "asyncio"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "asyncio"
+stdlib_since = "3.4"
+
+flags = [
+    "stdlib_backport: asyncio module available since Python 3.4",
+    "the standalone asyncio package (tulip) was merged into stdlib",
+]
+
+validated = 2026-03-07

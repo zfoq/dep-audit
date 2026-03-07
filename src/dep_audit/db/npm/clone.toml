@@ -1,0 +1,14 @@
+name = "clone"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.60
+
+replacement = "structuredClone()"
+stdlib_since = "17.0"
+
+flags = [
+    "stdlib_backport: structuredClone() available since Node 17",
+    "structuredClone does not handle functions, DOM nodes, or class instances",
+]
+
+validated = 2026-03-07

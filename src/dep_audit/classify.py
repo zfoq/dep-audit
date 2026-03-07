@@ -1,8 +1,7 @@
 """Classification decision tree for packages.
 
-The order matters: junk DB first (curated, high confidence), then stdlib_map
-(also curated but might not have a full entry yet), then deps.dev deprecated
-flag (live API check). Anything that doesn't match is "ok".
+The order matters: junk DB first (curated, high confidence), then deps.dev
+deprecated flag (live API check). Anything that doesn't match is "ok".
 """
 
 from __future__ import annotations
@@ -34,7 +33,6 @@ def classify_package(
     target_version: str,
     is_direct: bool,
     junk_db: dict[str, dict],
-    stdlib_map: dict[str, dict],
     offline: bool = False,
 ) -> Classification:
     """Classify a single package using the decision tree."""
@@ -46,7 +44,7 @@ def classify_package(
         classification="ok",
     )
 
-    # First check: the curated junk DB has the highest confidence
+    # First check: the curated junk DB
     entry = junk_db.get(name)
     if entry is not None:
         stdlib_since = entry.get("stdlib_since", "")
@@ -59,21 +57,6 @@ def classify_package(
             result.confidence = entry.get("confidence", 0.0)
             result.stdlib_since = stdlib_since
             result.flags = entry.get("flags", [])
-            return result
-
-    # Fallback: stdlib_map might know about it even without a full DB entry
-    map_entry = stdlib_map.get(name)
-    if map_entry is not None:
-        since = map_entry.get("since", "")
-        if since and _version_ge(target_version, since):
-            result.classification = "stdlib_backport"
-            result.replacement = map_entry.get("module", "")
-            result.stdlib_since = since
-            result.confidence = 0.60 if map_entry.get("partial") else 0.95
-            from dep_audit import ecosystems
-
-            eco_label = ecosystems.display_name(ecosystem)
-            result.flags = [f"stdlib_backport: {result.replacement} available since {eco_label} {since}"]
             return result
 
     # Last resort: ask deps.dev if the maintainer marked it deprecated
@@ -97,7 +80,6 @@ def classify_all(
 ) -> list[Classification]:
     """Classify a list of packages."""
     junk_db = db.load_junk_db(ecosystem)
-    stdlib_map = db.load_stdlib_map(ecosystem)
 
     results: list[Classification] = []
     for pkg in packages:
@@ -108,7 +90,6 @@ def classify_all(
             target_version=target_version,
             is_direct=pkg.get("is_direct", True),
             junk_db=junk_db,
-            stdlib_map=stdlib_map,
             offline=offline,
         )
         results.append(c)

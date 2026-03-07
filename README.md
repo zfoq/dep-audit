@@ -171,7 +171,7 @@ exit-code      = true                 # always use exit code mode
 
 ### Inline ignores
 
-Suppress a single package in `requirements.txt` by adding a comment:
+Suppress a single package by adding a comment inline. Currently supported in `requirements.txt` only:
 
 ```
 requests==2.31.0

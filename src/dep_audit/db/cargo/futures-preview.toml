@@ -1,0 +1,14 @@
+name = "futures-preview"
+ecosystem = "cargo"
+type = "stdlib_backport"
+confidence = 0.60
+
+replacement = "std::future"
+stdlib_since = "1.36"
+
+flags = [
+    "stdlib_backport: std::future::Future available since Rust 1.36 (stable async/await)",
+    "futures-preview was the pre-1.0 crate; the current futures crate still adds useful combinators",
+]
+
+validated = 2026-03-07

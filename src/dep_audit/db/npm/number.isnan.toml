@@ -1,0 +1,14 @@
+name = "number.isnan"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "Number.isNaN()"
+stdlib_since = "1.0"
+
+flags = [
+    "stdlib_backport: Number.isNaN() available since Node 1 / ES2015",
+    "unlike global isNaN(), Number.isNaN() does not coerce its argument",
+]
+
+validated = 2026-03-07

@@ -42,7 +42,6 @@ def test_classify_from_junk_db():
         target_version="3.12",
         is_direct=True,
         junk_db=junk_db,
-        stdlib_map={},
         offline=True,
     )
     assert result.classification == "stdlib_backport"
@@ -68,29 +67,9 @@ def test_classify_junk_db_version_too_low():
         target_version="3.10",  # below 3.11
         is_direct=True,
         junk_db=junk_db,
-        stdlib_map={},
         offline=True,
     )
     assert result.classification == "ok"
-
-
-def test_classify_from_stdlib_map():
-    """Falls back to stdlib_map when not in junk DB."""
-    stdlib_map = {
-        "pytz": {"module": "zoneinfo", "since": "3.9"},
-    }
-    result = classify_package(
-        ecosystem="python",
-        name="pytz",
-        version="2024.1",
-        target_version="3.12",
-        is_direct=True,
-        junk_db={},
-        stdlib_map=stdlib_map,
-        offline=True,
-    )
-    assert result.classification == "stdlib_backport"
-    assert result.replacement == "zoneinfo"
 
 
 def test_classify_unknown_package():
@@ -102,7 +81,6 @@ def test_classify_unknown_package():
         target_version="3.12",
         is_direct=True,
         junk_db={},
-        stdlib_map={},
         offline=True,
     )
     assert result.classification == "ok"

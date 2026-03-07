@@ -1,0 +1,13 @@
+name = "string.prototype.replaceall"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "String.prototype.replaceAll()"
+stdlib_since = "15.0"
+
+flags = [
+    "stdlib_backport: String.prototype.replaceAll() available since Node 15 / ES2021",
+]
+
+validated = 2026-03-07

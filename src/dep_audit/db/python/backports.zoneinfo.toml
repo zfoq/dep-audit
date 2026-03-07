@@ -1,0 +1,13 @@
+name = "backports.zoneinfo"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "zoneinfo"
+stdlib_since = "3.9"
+
+flags = [
+    "stdlib_backport: zoneinfo available since Python 3.9",
+]
+
+validated = 2026-03-07

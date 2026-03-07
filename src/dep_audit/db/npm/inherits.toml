@@ -1,0 +1,14 @@
+name = "inherits"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.60
+
+replacement = "class extends"
+stdlib_since = "4.0"
+
+flags = [
+    "stdlib_backport: ES6 class syntax available since Node 4",
+    "inherits() set up prototype chains; ES6 class extends covers most use cases",
+]
+
+validated = 2026-03-07
