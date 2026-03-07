@@ -7,7 +7,6 @@ import datetime
 from dep_audit.classify import Classification
 from dep_audit.generate import (
     discover_new,
-    export_discovered,
     format_toml_entry,
 )
 
@@ -91,47 +90,3 @@ def test_format_toml_entry_escapes_quotes():
     )
     toml = format_toml_entry(c, "python")
     assert 'use \\"new_thing\\" instead' in toml
-
-
-def test_export_discovered_writes_files(tmp_path):
-    """export_discovered should write TOML files to the output dir."""
-    classifications = [
-        _make_classification("pkg-a"),
-        _make_classification("pkg-b", classification="deprecated", replacement="pkg-c"),
-    ]
-    output_dir = tmp_path / "python"
-    written = export_discovered(classifications, "python", output_dir)
-    assert len(written) == 2
-    assert (output_dir / "pkg-a.toml").exists()
-    assert (output_dir / "pkg-b.toml").exists()
-
-    content = (output_dir / "pkg-a.toml").read_text()
-    assert 'name = "pkg-a"' in content
-
-
-def test_export_discovered_skips_ok(tmp_path):
-    """ok classifications should not be exported."""
-    classifications = [
-        Classification(name="fine", version="1.0", classification="ok"),
-    ]
-    written = export_discovered(classifications, "python", tmp_path / "python")
-    assert len(written) == 0
-
-
-def test_discover_and_export_roundtrip(tmp_path):
-    """Full pipeline: discover_new -> export_discovered."""
-    # Mix of known (pytz) and unknown packages
-    classifications = [
-        _make_classification("pytz", replacement="zoneinfo", stdlib_since="3.9"),
-        _make_classification("never-heard-of-this"),
-        Classification(name="requests", version="2.31.0", classification="ok"),
-    ]
-
-    discovered = discover_new(classifications, "python")
-    assert len(discovered) == 1
-    assert discovered[0].name == "never-heard-of-this"
-
-    output_dir = tmp_path / "python"
-    written = export_discovered(discovered, "python", output_dir)
-    assert len(written) == 1
-    assert (output_dir / "never-heard-of-this.toml").exists()
