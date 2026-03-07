@@ -1,0 +1,15 @@
+name = "github.com/golang/glog"
+ecosystem = "go"
+type = "stdlib_backport"
+confidence = 0.80
+
+replacement = "log/slog (stdlib since Go 1.21)"
+stdlib_since = "1.21"
+
+flags = [
+    "stdlib_backport: log/slog was added in Go 1.21 with structured, levelled logging",
+    "stdlib_backport: glog predates structured logging in the stdlib and uses global state",
+    "stdlib_backport: k8s.io/klog/v2 (common in Kubernetes code) also wraps glog and migrating to slog is recommended",
+]
+
+validated = 2026-03-07

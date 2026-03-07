@@ -326,3 +326,132 @@ def _match_rust_import(
             return original, line.strip()
 
     return None
+
+
+# ---------------------------------------------------------------------------
+# Go import scanning
+# ---------------------------------------------------------------------------
+
+_GO_EXCLUDE = {
+    "vendor", ".git", "testdata", "internal/testdata",
+}
+
+# Matches: import "github.com/foo/bar"  or  import alias "github.com/foo/bar"
+_RE_GO_IMPORT_SINGLE = re.compile(r"""import\s+(?:\w+\s+)?["']([^"']+)["']""")
+
+# Matches lines inside import (...) blocks: optionally aliased
+_RE_GO_IMPORT_LINE = re.compile(r"""^\s+(?:\w+\s+)?["']([^"']+)["']""")
+
+
+def scan_go_imports(
+    source_root: Path,
+    package_names: set[str],
+    exclude_dirs: set[str] | None = None,
+) -> dict[str, UsageReport]:
+    """Walk .go files, find import statements matching known module paths.
+
+    Go imports use full package paths (e.g. "github.com/foo/bar/sub").
+    A module path like "github.com/foo/bar" matches any import that starts
+    with it, so we do prefix matching against the known module set.
+    Test files (*_test.go) are excluded unless include_dev is True — but
+    since scan_go_imports is called with the full package_names set, test
+    files are just skipped here by default.
+    """
+    if exclude_dirs is None:
+        exclude_dirs = _GO_EXCLUDE
+
+    # Build a frozenset of module paths for O(1) prefix lookup
+    module_set = frozenset(package_names)
+
+    results: dict[str, UsageReport] = {name: UsageReport() for name in package_names}
+    seen_files: dict[str, set[str]] = {name: set() for name in package_names}
+
+    for go_file in _walk_go_files(source_root, exclude_dirs):
+        try:
+            source = go_file.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+
+        rel_path = str(go_file.relative_to(source_root))
+        imports = _extract_go_imports(source)
+
+        for import_path in imports:
+            module = _go_import_to_module(import_path, module_set)
+            if module is None:
+                continue
+            report = results[module]
+            report.import_count += 1
+            report.files.append(FileRef(path=rel_path, line=0, symbol=import_path))
+            seen_files[module].add(rel_path)
+
+    for name in package_names:
+        results[name].file_count = len(seen_files[name])
+
+    return results
+
+
+def _walk_go_files(root: Path, exclude_dirs: set[str]):
+    """Yield .go files under root, skipping vendor/, testdata/, and test files."""
+    if not root.is_dir():
+        return
+    for item in root.rglob("*.go"):
+        parts = item.relative_to(root).parts[:-1]
+        if any(p in exclude_dirs for p in parts):
+            continue
+        if not item.is_file():
+            continue
+        yield item
+
+
+def _extract_go_imports(source: str) -> list[str]:
+    """Extract all import paths from Go source code.
+
+    Handles both single imports and import blocks:
+      import "pkg"
+      import alias "pkg"
+      import (
+          "pkg"
+          alias "pkg"
+      )
+    """
+    imports: list[str] = []
+    in_block = False
+
+    for line in source.splitlines():
+        stripped = line.strip()
+
+        if stripped.startswith("import ("):
+            in_block = True
+            continue
+        if in_block:
+            if stripped == ")":
+                in_block = False
+                continue
+            m = _RE_GO_IMPORT_LINE.match(line)
+            if m:
+                path = m.group(1)
+                if not path.startswith("."):
+                    imports.append(path)
+        else:
+            m = _RE_GO_IMPORT_SINGLE.search(line)
+            if m:
+                path = m.group(1)
+                if not path.startswith("."):
+                    imports.append(path)
+
+    return imports
+
+
+def _go_import_to_module(import_path: str, module_set: frozenset[str]) -> str | None:
+    """Find the module path for a Go import by walking path prefixes.
+
+    "github.com/sirupsen/logrus/hooks/syslog" with module set containing
+    "github.com/sirupsen/logrus" returns "github.com/sirupsen/logrus".
+    Tries the longest prefix first (most specific match).
+    """
+    parts = import_path.split("/")
+    for i in range(len(parts), 0, -1):
+        candidate = "/".join(parts[:i])
+        if candidate in module_set:
+            return candidate
+    return None

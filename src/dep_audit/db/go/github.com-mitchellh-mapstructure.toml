@@ -1,0 +1,14 @@
+name = "github.com/mitchellh/mapstructure"
+ecosystem = "go"
+type = "deprecated"
+confidence = 0.85
+
+replacement = "github.com/go-viper/mapstructure/v2"
+
+flags = [
+    "deprecated: mitchellh/mapstructure README directs users to go-viper/mapstructure as the successor",
+    "deprecated: go-viper/mapstructure/v2 adds generics support and resolves long-standing issues",
+    "deprecated: spf13/viper (major consumer) migrated to go-viper/mapstructure/v2",
+]
+
+validated = 2026-03-07

@@ -45,6 +45,20 @@ jobs:
               actix/actix-web
               hyperium/hyper
               clap-rs/clap
+          - ecosystem: go
+            repos: >-
+              go-gitea/gitea
+              caddyserver/caddy
+              gohugoio/hugo
+              argoproj/argo-workflows
+              argoproj/argo-cd
+              hashicorp/vault
+              open-policy-agent/opa
+              cockroachdb/cockroach
+              vitessio/vitess
+              istio/istio
+              minio/minio
+              influxdata/influxdb
 
     steps:
       - uses: actions/checkout@v4

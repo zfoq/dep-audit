@@ -85,6 +85,13 @@ def detect_target_version_from_bundle(bundle: dict[str, str], ecosystem: str) ->
     Same logic as detect_target_version but works on fetched file contents
     instead of reading from disk. Returns None if version can't be determined.
     """
+    if ecosystem == "go":
+        content = bundle.get("go.mod", "")
+        if not content:
+            return None
+        m = re.search(r"^go\s+(\d+\.\d+)", content, re.MULTILINE)
+        return m.group(1) if m else None
+
     if ecosystem == "cargo":
         content = bundle.get("Cargo.toml", "")
         if not content:
@@ -128,13 +135,29 @@ def detect_target_version(project_root: Path, ecosystem: str) -> str | None:
 
     Rust  — package.rust-version in Cargo.toml  (e.g. "1.70")
     npm   — engines.node in package.json         (e.g. ">=18.0.0" → "18.0")
+    Go    — go directive in go.mod               (e.g. "go 1.21")
     Python is handled by load_config() via requires-python.
     """
     if ecosystem == "cargo":
         return _detect_rust_version(project_root)
     if ecosystem == "npm":
         return _detect_node_version(project_root)
+    if ecosystem == "go":
+        return _detect_go_version(project_root)
     return None
+
+
+def _detect_go_version(project_root: Path) -> str | None:
+    """Read go directive from go.mod (e.g. 'go 1.21' -> '1.21')."""
+    go_mod = project_root / "go.mod"
+    if not go_mod.exists():
+        return None
+    try:
+        content = go_mod.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    m = re.search(r"^go\s+(\d+\.\d+)", content, re.MULTILINE)
+    return m.group(1) if m else None
 
 
 def _detect_rust_version(project_root: Path) -> str | None:

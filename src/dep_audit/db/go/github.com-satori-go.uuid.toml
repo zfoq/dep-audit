@@ -1,0 +1,14 @@
+name = "github.com/satori/go.uuid"
+ecosystem = "go"
+type = "deprecated"
+confidence = 0.90
+
+replacement = "github.com/google/uuid"
+
+flags = [
+    "deprecated: satori/go.uuid is unmaintained (last release 2018)",
+    "deprecated: known UUID v1 timestamp bug in v1.2.0",
+    "deprecated: google/uuid is the actively maintained replacement",
+]
+
+validated = 2026-03-07

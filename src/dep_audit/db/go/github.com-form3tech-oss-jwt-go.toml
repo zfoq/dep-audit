@@ -1,0 +1,14 @@
+name = "github.com/form3tech-oss/jwt-go"
+ecosystem = "go"
+type = "deprecated"
+confidence = 1.0
+
+replacement = "github.com/golang-jwt/jwt/v5"
+
+flags = [
+    "deprecated: form3tech-oss/jwt-go was a temporary fork of dgrijalva/jwt-go with a security fix",
+    "deprecated: repository is archived; golang-jwt/jwt is the canonical maintained successor",
+    "deprecated: golang-jwt/jwt/v5 has a stable API and active maintenance",
+]
+
+validated = 2026-03-07

@@ -36,16 +36,24 @@ def get_entry_path(ecosystem: str, package: str) -> Path:
 
 
 def get_junk_entry(ecosystem: str, package: str) -> dict | None:
-    """Load a single junk DB entry for a package."""
+    """Load a single junk DB entry for a package.
+
+    First tries the conventional {package}.toml path (works for Python/npm/Cargo).
+    Falls back to scanning all entries by name field, which handles Go module paths
+    that contain slashes and cannot be represented as a flat filename.
+    """
     p = get_entry_path(ecosystem, package)
-    if not p.exists():
-        return None
-    try:
-        with open(p, "rb") as f:
-            return tomllib.load(f)
-    except Exception as e:
-        logger.warning("Failed to load junk DB entry %s: %s", p.name, e)
-        return None
+    if p.exists():
+        try:
+            with open(p, "rb") as f:
+                return tomllib.load(f)
+        except Exception as e:
+            logger.warning("Failed to load junk DB entry %s: %s", p.name, e)
+            return None
+
+    # Fallback: search all entries by name (handles Go-style module paths with slashes)
+    all_entries = load_junk_db(ecosystem)
+    return all_entries.get(package)
 
 
 def list_entries(ecosystem: str) -> dict[str, list[str]]:

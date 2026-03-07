@@ -199,3 +199,43 @@ def test_known_logs_suppression_note(tmp_path, capsys):
     assert ret == 0
     captured = capsys.readouterr()
     assert "known finding" in captured.err
+
+
+def test_scan_go_project_offline(tmp_path, capsys):
+    """Scanning a Go project offline should produce a Go ecosystem JSON result."""
+    (tmp_path / "go.mod").write_text(
+        "module example.com/myapp\n\ngo 1.21\n\n"
+        "require github.com/pkg/errors v0.9.1\n"
+    )
+    ret = main(["scan", str(tmp_path), "--offline", "--format", "json"])
+    assert ret == 0
+    captured = capsys.readouterr()
+    import json
+    data = json.loads(captured.out.strip())
+    assert data["ecosystem"] == "go"
+
+
+def test_scan_go_exit_code_with_finding(tmp_path):
+    """A flagged Go dep (pkg/errors = stdlib_backport) should trigger --exit-code."""
+    (tmp_path / "go.mod").write_text(
+        "module example.com/myapp\n\ngo 1.21\n\n"
+        "require github.com/pkg/errors v0.9.1\n"
+    )
+    ret = main(["scan", str(tmp_path), "--offline", "--exit-code"])
+    assert ret == 1
+
+
+def test_db_show_go_slash_path(capsys):
+    """db show for a Go module path with slashes should resolve via name-field fallback."""
+    ret = main(["db", "show", "github.com/pkg/errors", "--ecosystem", "go"])
+    assert ret == 0
+    captured = capsys.readouterr()
+    assert "stdlib_backport" in captured.out
+
+
+def test_db_list_go(capsys):
+    """db list go should show registered Go DB entries."""
+    ret = main(["db", "list", "go"])
+    assert ret == 0
+    captured = capsys.readouterr()
+    assert "go:" in captured.out

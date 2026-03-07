@@ -1,0 +1,14 @@
+name = "github.com/sirupsen/logrus"
+ecosystem = "go"
+type = "stdlib_backport"
+confidence = 0.70
+
+replacement = "log/slog"
+stdlib_since = "1.21"
+
+flags = [
+    "stdlib_backport: log/slog (structured logging) added in Go 1.21",
+    "note: logrus has richer hook and formatter ecosystem; evaluate before migrating",
+]
+
+validated = 2026-03-07

@@ -1,0 +1,14 @@
+name = "github.com/pkg/errors"
+ecosystem = "go"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "errors + fmt.Errorf %w"
+stdlib_since = "1.13"
+
+flags = [
+    "stdlib_backport: fmt.Errorf with %w verb wraps errors since Go 1.13",
+    "stdlib_backport: errors.Is and errors.As for unwrapping since Go 1.13",
+]
+
+validated = 2026-03-07

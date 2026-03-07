@@ -1,0 +1,14 @@
+name = "gopkg.in/yaml.v2"
+ecosystem = "go"
+type = "deprecated"
+confidence = 0.80
+
+replacement = "gopkg.in/yaml.v3"
+
+flags = [
+    "deprecated: yaml.v2 is no longer maintained; only security fixes are accepted",
+    "deprecated: yaml.v3 adds full YAML 1.2 support, better error messages, and node-level API",
+    "deprecated: migration is straightforward for most use cases",
+]
+
+validated = 2026-03-07

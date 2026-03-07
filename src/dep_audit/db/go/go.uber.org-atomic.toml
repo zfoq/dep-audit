@@ -1,0 +1,15 @@
+name = "go.uber.org/atomic"
+ecosystem = "go"
+type = "stdlib_backport"
+confidence = 0.80
+
+replacement = "sync/atomic (stdlib since Go 1.19)"
+stdlib_since = "1.19"
+
+flags = [
+    "stdlib_backport: Go 1.19 added atomic.Bool, atomic.Int32, atomic.Int64, atomic.Uint32, atomic.Uint64, atomic.Pointer",
+    "stdlib_backport: go.uber.org/atomic is a thin wrapper; the stdlib types are API-compatible",
+    "stdlib_backport: uber-go/atomic README recommends migrating to sync/atomic",
+]
+
+validated = 2026-03-07

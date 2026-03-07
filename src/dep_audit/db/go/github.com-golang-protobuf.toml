@@ -1,0 +1,14 @@
+name = "github.com/golang/protobuf"
+ecosystem = "go"
+type = "deprecated"
+confidence = 0.95
+
+replacement = "google.golang.org/protobuf"
+
+flags = [
+    "deprecated: github.com/golang/protobuf is the old v1 API, deprecated since 2020",
+    "deprecated: google.golang.org/protobuf is the actively maintained v2 replacement",
+    "deprecated: the v1 wrapper is frozen and only re-exports the v2 API",
+]
+
+validated = 2026-03-07

@@ -1,0 +1,14 @@
+name = "github.com/imdario/mergo"
+ecosystem = "go"
+type = "deprecated"
+confidence = 0.85
+
+replacement = "dario.cat/mergo"
+
+flags = [
+    "deprecated: import path moved from github.com/imdario/mergo to dario.cat/mergo (same author)",
+    "deprecated: github.com/imdario/mergo redirects to darccio/mergo which uses the new import path",
+    "deprecated: new features and fixes are only published under dario.cat/mergo",
+]
+
+validated = 2026-03-07

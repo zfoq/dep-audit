@@ -1,0 +1,14 @@
+name = "github.com/golang/dep"
+ecosystem = "go"
+type = "deprecated"
+confidence = 1.0
+
+replacement = "go mod (built-in since Go 1.11)"
+
+flags = [
+    "deprecated: dep was the official experiment before Go modules",
+    "deprecated: go mod is the standard dependency manager since Go 1.11",
+    "deprecated: dep repository is archived and unmaintained",
+]
+
+validated = 2026-03-07
