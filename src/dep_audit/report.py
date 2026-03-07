@@ -84,7 +84,7 @@ def terminal_report(result: ScanResult) -> str:
         for c in replaceable:
             u = usage.get(c.name, UsageReport())
             label = c.classification
-            since = f" ({target_version}+)" if c.stdlib_since else ""
+            since = f" (since {c.stdlib_since})" if c.stdlib_since else ""
             lines.append(f"  {c.name} {'·' * max(1, 40 - len(c.name))} {label} → {c.replacement}{since}")
             if not is_remote and u.import_count > 0:
                 if u.file_count == 1:
@@ -108,7 +108,39 @@ def terminal_report(result: ScanResult) -> str:
             lines.append("  minimum supported version to suppress false positives.")
             lines.append("")
 
-    # Section 3: DEPRECATED
+    # Section 3: SIMPLIFY — micro-utilities that are actively imported
+    if is_remote:
+        micro_utils = [c for c in flagged if c.classification == "micro_utility"]
+    else:
+        micro_utils = [
+            c for c in flagged
+            if c.classification == "micro_utility" and not _is_unused(c, usage)
+        ]
+    lines.append("SIMPLIFY — micro-utilities (inline replacements):")
+    lines.append("")
+    if micro_utils:
+        for c in micro_utils:
+            repl = f" → {c.replacement}" if c.replacement else " → native code"
+            lines.append(f"  {c.name} {'·' * max(1, 40 - len(c.name))} micro_utility{repl}")
+            u = usage.get(c.name, UsageReport())
+            if not is_remote and u.import_count > 0:
+                if u.file_count == 1:
+                    ref = u.files[0] if u.files else None
+                    loc = f" in {ref.path}:{ref.line}" if ref else ""
+                    lines.append(f"      {u.import_count} import{loc}")
+                else:
+                    lines.append(f"      {u.import_count} imports across {u.file_count} files")
+            for flag in c.flags:
+                lines.append(f"      {flag}")
+            also = _also_removes(c.name, anchors)
+            if also:
+                lines.append(f"      removing {c.name} also removes {', '.join(also)}")
+            lines.append("")
+    else:
+        lines.append("  (none)")
+        lines.append("")
+
+    # Section 4: DEPRECATED
     deprecated = [c for c in flagged if c.classification == "deprecated"]
     lines.append("DEPRECATED:")
     lines.append("")
@@ -138,6 +170,8 @@ def terminal_report(result: ScanResult) -> str:
             lines.append(f"  {len(unused_list)} zero-effort removal{'s' if len(unused_list) != 1 else ''}")
     if replaceable:
         lines.append(f"  {len(replaceable)} stdlib replacement{'s' if len(replaceable) != 1 else ''}")
+    if micro_utils:
+        lines.append(f"  {len(micro_utils)} micro-utilit{'ies' if len(micro_utils) != 1 else 'y'} to inline")
     if deprecated:
         lines.append(f"  {len(deprecated)} deprecated")
     if also_removed:
@@ -200,6 +234,7 @@ def json_report(result: ScanResult) -> str:
         if c.classification in ("stdlib_backport", "zombie_shim")
         and (is_remote or not _is_unused(c, usage))
     )
+    micro_utility_count = sum(1 for c in flagged if c.classification == "micro_utility")
     deprecated_count = sum(1 for c in flagged if c.classification == "deprecated")
     also_freed: set[str] = set()
     for c in flagged:
@@ -216,6 +251,7 @@ def json_report(result: ScanResult) -> str:
         "summary": {
             "zero_effort_removals": unused_count,
             "stdlib_replacements": replaceable_count,
+            "micro_utilities": micro_utility_count,
             "deprecated": deprecated_count,
             "total_transitive_freed": len(also_freed),
         },

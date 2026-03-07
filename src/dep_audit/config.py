@@ -10,6 +10,7 @@ Supported keys:
   ecosystem = "python"                    # force ecosystem
   offline = true                          # skip deps.dev API
   exit-code = true                        # non-zero exit on findings
+  min-confidence = 0.8                    # with exit-code: minimum confidence to trigger failure
 
 If target-version is not set, it is auto-detected from the project manifest:
   Python  — [project].requires-python in pyproject.toml
@@ -28,7 +29,7 @@ from pathlib import Path
 
 logger = logging.getLogger("dep_audit")
 
-_KNOWN_KEYS = frozenset({"ignore", "target-version", "ecosystem", "offline", "exit-code"})
+_KNOWN_KEYS = frozenset({"ignore", "target-version", "ecosystem", "offline", "exit-code", "min-confidence"})
 
 
 def load_config(project_root: Path) -> dict:

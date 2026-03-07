@@ -219,12 +219,16 @@ def scan_remote(
             lockfile_result = _resolve_transitive_deps(lockfile_result, eco)
             result.lockfile_result = lockfile_result
 
+        # Load junk DB once — reused for both classification and anchor tracing
+        from dep_audit.db import load_junk_db
+        junk_db = load_junk_db(eco)
+
         # Classify all packages (same as local scan)
         packages = [
             {"name": d.name, "version": d.version, "is_direct": d.is_direct}
             for d in lockfile_result.deps
         ]
-        result.classifications = classify_all(eco, packages, tv, offline)
+        result.classifications = classify_all(eco, packages, tv, offline, junk_db=junk_db)
 
         # Apply ignore list (config + inline # dep-audit: ignore comments)
         effective_ignore = (ignore or set()) | lockfile_result.inline_ignores
@@ -248,6 +252,15 @@ def scan_remote(
             result.anchors = _trace_anchors_no_usage(
                 result.dependency_tree, flagged_transitive, direct_names,
             )
+
+        # Add anchor entries for flagged direct deps (UNKNOWN verdict — no usage data)
+        for c in result.classifications:
+            if c.classification != "ok" and c.is_direct and c.name not in result.anchors:
+                result.anchors[c.name] = AnchorResult(
+                    anchor_name=c.name,
+                    anchor_verdict="UNKNOWN",
+                    chain=[c.name],
+                )
 
         results.append(result)
 

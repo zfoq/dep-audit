@@ -75,6 +75,7 @@ def main(argv: list[str] | None = None) -> int:
     p_check.add_argument("package", help="Package name")
     p_check.add_argument("--ecosystem", default="python", help="Ecosystem (default: python)")
     p_check.add_argument("--target-version", help="Language version")
+    p_check.add_argument("--offline", action="store_true", help="Skip deps.dev API calls")
 
     # --- db ---
     p_db = sub.add_parser("db", help="Database management")
@@ -154,6 +155,9 @@ def _cmd_scan(args: argparse.Namespace) -> int:
         target_version = args.target_version or cfg.get("target-version")
         offline = args.offline or bool(cfg.get("offline", False))
         exit_code = args.exit_code or bool(cfg.get("exit-code", False))
+        # CLI --min-confidence overrides config (config only applies when CLI is at default 0.0)
+        if args.min_confidence == 0.0 and "min-confidence" in cfg:
+            args.min_confidence = float(cfg["min-confidence"])
 
         if ignored := ignore:
             logger.debug("Ignoring %d package(s): %s", len(ignored), ", ".join(sorted(ignored)))
@@ -221,28 +225,29 @@ def _cmd_check(args: argparse.Namespace) -> int:
         print("  Not flagged. No known unnecessary usage.")
         print()
 
-    # deps.dev enrichment
-    pkg_data = depsdev.get_package(ecosystem, name)
-    if pkg_data:
-        versions = pkg_data.get("versions", [])
-        latest_version = ""
-        if versions:
-            latest_version = versions[-1].get("versionKey", {}).get("version", "")
+    # deps.dev enrichment (skipped in offline mode)
+    if not args.offline:
+        pkg_data = depsdev.get_package(ecosystem, name)
+        if pkg_data:
+            versions = pkg_data.get("versions", [])
+            latest_version = ""
+            if versions:
+                latest_version = versions[-1].get("versionKey", {}).get("version", "")
 
-        if latest_version:
-            deprecated, _ = depsdev.is_deprecated(ecosystem, name, latest_version)
-            ver_data = depsdev.get_version(ecosystem, name, latest_version)
-            advisories = len(ver_data.get("advisoryKeys", [])) if ver_data else 0
+            if latest_version:
+                deprecated, _ = depsdev.is_deprecated(ecosystem, name, latest_version)
+                ver_data = depsdev.get_version(ecosystem, name, latest_version)
+                advisories = len(ver_data.get("advisoryKeys", [])) if ver_data else 0
 
-            sys_name = depsdev.system_name(ecosystem)
-            print("  Ecosystem data:")
-            print(f"    deps.dev:    https://deps.dev/{sys_name}/{name}")
-            print(f"    deprecated:  {'yes' if deprecated else 'no'}")
-            print(f"    advisories:  {advisories}")
+                sys_name = depsdev.system_name(ecosystem)
+                print("  Ecosystem data:")
+                print(f"    deps.dev:    https://deps.dev/{sys_name}/{name}")
+                print(f"    deprecated:  {'yes' if deprecated else 'no'}")
+                print(f"    advisories:  {advisories}")
+                print()
+        else:
+            print("  (deps.dev data unavailable)")
             print()
-    else:
-        print("  (deps.dev data unavailable)")
-        print()
 
     return 0
 

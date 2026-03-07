@@ -192,3 +192,65 @@ def test_sarif_level_downgrade_on_low_confidence():
     data = json.loads(output)
     results = data["runs"][0]["results"]
     assert results[0]["level"] == "note"  # confidence 0.60 < 0.7 threshold
+
+
+def test_terminal_report_has_simplify_section():
+    """SIMPLIFY section should appear in terminal report."""
+    result = _make_scan_result()
+    output = terminal_report(result)
+    assert "SIMPLIFY" in output
+
+
+def test_terminal_report_micro_utility_visible():
+    """micro_utility findings that are imported should appear in the SIMPLIFY section."""
+    classifications = [
+        Classification(
+            name="is-odd", version="3.0.1", classification="micro_utility",
+            confidence=0.95, replacement="x % 2 !== 0", is_direct=True,
+            flags=["micro_utility: single-line check replaceable with modulo operator"],
+        ),
+    ]
+    usage = {"is-odd": UsageReport(import_count=3, file_count=2)}
+    result = _make_scan_result(
+        classifications=classifications, usage=usage, anchors={}, ecosystem="npm",
+    )
+    output = terminal_report(result)
+    assert "is-odd" in output
+    simplify_idx = output.index("SIMPLIFY")
+    deprecated_idx = output.index("DEPRECATED")
+    is_odd_idx = output.index("is-odd")
+    assert simplify_idx < is_odd_idx < deprecated_idx
+
+
+def test_json_report_micro_utility_in_summary():
+    """JSON summary should include micro_utilities count."""
+    classifications = [
+        Classification(
+            name="is-even", version="1.0.0", classification="micro_utility",
+            confidence=0.95, is_direct=True,
+        ),
+    ]
+    result = _make_scan_result(
+        classifications=classifications, usage={}, anchors={}, ecosystem="npm",
+    )
+    output = json_report(result)
+    data = json.loads(output)
+    assert data["summary"]["micro_utilities"] == 1
+
+
+def test_terminal_report_since_label_correct():
+    """REPLACE section should show 'since X.Y' not 'X.Y+'."""
+    result = _make_scan_result()
+    output = terminal_report(result)
+    # pytz.stdlib_since = "3.9", should show "since 3.9" not "3.12+"
+    assert "since 3.9" in output
+    assert "3.12+" not in output
+
+
+def test_version_ge_with_three_part_versions():
+    """_version_ge should handle 3-part versions correctly."""
+    from dep_audit.classify import _version_ge
+    assert _version_ge("3.11", "3.11.0") is True
+    assert _version_ge("3.11.0", "3.11") is True
+    assert _version_ge("3.11", "3.11.1") is False
+    assert _version_ge("3.11.2", "3.11.1") is True

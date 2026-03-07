@@ -98,10 +98,18 @@ def classify_all(
 
 
 def _version_ge(current: str, required: str) -> bool:
-    """Check if current version >= required version (dotted strings)."""
+    """Check if current version >= required version (dotted strings).
+
+    Pads shorter version to same length before comparing so that
+    "3.11" >= "3.11.0" is True.
+    """
     try:
         cur_parts = [int(x) for x in current.split(".")]
         req_parts = [int(x) for x in required.split(".")]
+        # Pad to equal length with zeros
+        length = max(len(cur_parts), len(req_parts))
+        cur_parts += [0] * (length - len(cur_parts))
+        req_parts += [0] * (length - len(req_parts))
         return cur_parts >= req_parts
     except (ValueError, AttributeError):
         return False
