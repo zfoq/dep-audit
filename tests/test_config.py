@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from dep_audit.config import load_config
+from dep_audit.config import detect_target_version, load_config
 
 
 def test_no_pyproject_returns_empty(tmp_path: Path):
@@ -98,3 +98,71 @@ def test_invalid_standalone_toml_returns_empty(tmp_path: Path):
     (tmp_path / ".dep-audit.toml").write_text("not valid toml ][[\n")
     cfg = load_config(tmp_path)
     assert cfg == {}
+
+
+# --- detect_target_version ---
+
+
+def test_detect_rust_version_from_cargo_toml(tmp_path: Path):
+    (tmp_path / "Cargo.toml").write_text(
+        '[package]\nname = "my-crate"\nversion = "0.1.0"\nrust-version = "1.70"\n'
+    )
+    assert detect_target_version(tmp_path, "cargo") == "1.70"
+
+
+def test_detect_rust_version_three_part(tmp_path: Path):
+    (tmp_path / "Cargo.toml").write_text(
+        '[package]\nname = "x"\nversion = "0.1.0"\nrust-version = "1.65.0"\n'
+    )
+    assert detect_target_version(tmp_path, "cargo") == "1.65"
+
+
+def test_detect_rust_version_missing_field(tmp_path: Path):
+    (tmp_path / "Cargo.toml").write_text('[package]\nname = "x"\nversion = "0.1.0"\n')
+    assert detect_target_version(tmp_path, "cargo") is None
+
+
+def test_detect_rust_version_no_cargo_toml(tmp_path: Path):
+    assert detect_target_version(tmp_path, "cargo") is None
+
+
+def test_detect_node_version_from_package_json(tmp_path: Path):
+    (tmp_path / "package.json").write_text(
+        '{"name": "x", "engines": {"node": ">=18.0.0"}}\n'
+    )
+    assert detect_target_version(tmp_path, "npm") == "18.0"
+
+
+def test_detect_node_version_caret_range(tmp_path: Path):
+    (tmp_path / "package.json").write_text(
+        '{"engines": {"node": "^20.0.0"}}\n'
+    )
+    assert detect_target_version(tmp_path, "npm") == "20.0"
+
+
+def test_detect_node_version_bare_major(tmp_path: Path):
+    (tmp_path / "package.json").write_text('{"engines": {"node": "18"}}\n')
+    assert detect_target_version(tmp_path, "npm") == "18.0"
+
+
+def test_detect_node_version_with_minor(tmp_path: Path):
+    (tmp_path / "package.json").write_text('{"engines": {"node": ">=18.12"}}\n')
+    assert detect_target_version(tmp_path, "npm") == "18.12"
+
+
+def test_detect_node_version_no_engines_field(tmp_path: Path):
+    (tmp_path / "package.json").write_text('{"name": "x"}\n')
+    assert detect_target_version(tmp_path, "npm") is None
+
+
+def test_detect_node_version_no_package_json(tmp_path: Path):
+    assert detect_target_version(tmp_path, "npm") is None
+
+
+def test_detect_returns_none_for_python(tmp_path: Path):
+    # Python version is handled by load_config, not detect_target_version
+    assert detect_target_version(tmp_path, "python") is None
+
+
+def test_detect_returns_none_for_unknown_ecosystem(tmp_path: Path):
+    assert detect_target_version(tmp_path, "ruby") is None

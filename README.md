@@ -167,7 +167,7 @@ offline        = true                 # always skip deps.dev API
 exit-code      = true                 # always use exit code mode
 ```
 
-For Python projects, `target-version` is also auto-detected from `[project].requires-python` — so if your project already declares `requires-python = ">=3.11"`, dep-audit will use `3.11` automatically.
+`target-version` is auto-detected from the project manifest for all ecosystems — Python from `requires-python`, Rust from `package.rust-version` in `Cargo.toml`, and npm from `engines.node` in `package.json`. Set it explicitly only when you need to override the detected value.
 
 ### Inline ignores
 
@@ -207,7 +207,15 @@ Use `--offline` in CI/pre-commit for speed and determinism. Drop it when you wan
 
 ## CI integration
 
-For Python projects, `target-version` is auto-detected from `requires-python` in `pyproject.toml` — no flag needed. For npm and Rust the defaults are Node.js 22 and Rust 1.80; override with `--target-version` or set it in `.dep-audit.toml` if your project targets an older version.
+dep-audit auto-detects the target language version from the project manifest — no flag needed for most projects:
+
+| Ecosystem | Detected from | Example |
+|---|---|---|
+| Python | `requires-python` in `pyproject.toml` | `>=3.11` → `3.11` |
+| Rust | `package.rust-version` in `Cargo.toml` | `1.70` |
+| npm | `engines.node` in `package.json` | `>=18.0.0` → `18.0` |
+
+If the field is absent, dep-audit falls back to a conservative default (Python: running interpreter, Rust: 1.80, Node: 22). Override any of these with `--target-version` or `target-version` in `.dep-audit.toml`.
 
 ### GitHub Actions
 

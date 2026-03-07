@@ -39,9 +39,15 @@ def scan(
     if not eco_list:
         return []
 
+    from dep_audit.config import detect_target_version
+
     results: list[ScanResult] = []
     for eco in eco_list:
-        tv = target_version or ecosystems.resolve_target_version(eco)
+        tv = (
+            target_version
+            or detect_target_version(project_root, eco)
+            or ecosystems.resolve_target_version(eco)
+        )
         result = _scan_ecosystem(project_root, project_name, eco, tv, include_dev, offline, ignore or set())
         results.append(result)
 
