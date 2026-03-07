@@ -1,0 +1,12 @@
+- id: dep-audit
+  name: dep-audit
+  description: Identify unnecessary dependencies (stdlib backports, zombie shims, deprecated packages, unused deps).
+  entry: dep-audit scan . --exit-code --offline
+  language: python
+  pass_filenames: false
+  files: >-
+    (?x)^(
+      uv\.lock|poetry\.lock|requirements.*\.txt|pyproject\.toml|
+      package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml|
+      Cargo\.(lock|toml)
+    )$
