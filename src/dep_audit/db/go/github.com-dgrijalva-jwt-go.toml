@@ -1,0 +1,14 @@
+name = "github.com/dgrijalva/jwt-go"
+ecosystem = "go"
+type = "deprecated"
+confidence = 1.0
+
+replacement = "github.com/golang-jwt/jwt/v5"
+
+flags = [
+    "deprecated: repository is archived and unmaintained",
+    "deprecated: CVE-2020-26160 — audience claim validation bypass in v3.2.0 and earlier",
+    "deprecated: golang-jwt/jwt is the community-maintained drop-in fork with security fixes",
+]
+
+validated = 2026-03-07

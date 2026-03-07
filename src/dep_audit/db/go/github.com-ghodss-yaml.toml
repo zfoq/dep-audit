@@ -1,0 +1,14 @@
+name = "github.com/ghodss/yaml"
+ecosystem = "go"
+type = "deprecated"
+confidence = 0.85
+
+replacement = "sigs.k8s.io/yaml"
+
+flags = [
+    "deprecated: ghodss/yaml is unmaintained (last commit 2019)",
+    "deprecated: sigs.k8s.io/yaml is the Kubernetes-maintained fork with active development",
+    "deprecated: both convert YAML→JSON→struct; sigs.k8s.io/yaml has identical API and fixes known bugs",
+]
+
+validated = 2026-03-07

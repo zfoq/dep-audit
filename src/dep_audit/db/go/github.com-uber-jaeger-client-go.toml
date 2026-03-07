@@ -1,0 +1,14 @@
+name = "github.com/uber/jaeger-client-go"
+ecosystem = "go"
+type = "deprecated"
+confidence = 0.95
+
+replacement = "go.opentelemetry.io/otel (OpenTelemetry SDK)"
+
+flags = [
+    "deprecated: Jaeger officially deprecated the Go client library in favour of the OpenTelemetry SDK",
+    "deprecated: repository is archived; last release was 2022",
+    "deprecated: use go.opentelemetry.io/otel with the OTLP or Jaeger exporter instead",
+]
+
+validated = 2026-03-07

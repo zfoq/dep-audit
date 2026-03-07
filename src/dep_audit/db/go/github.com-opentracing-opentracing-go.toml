@@ -1,0 +1,14 @@
+name = "github.com/opentracing/opentracing-go"
+ecosystem = "go"
+type = "deprecated"
+confidence = 0.95
+
+replacement = "go.opentelemetry.io/otel"
+
+flags = [
+    "deprecated: OpenTracing project merged with OpenCensus to form OpenTelemetry in 2019",
+    "deprecated: opentracing.io now redirects to opentelemetry.io",
+    "deprecated: go.opentelemetry.io/otel is the CNCF-maintained replacement with active development",
+]
+
+validated = 2026-03-07

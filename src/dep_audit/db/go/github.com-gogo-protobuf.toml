@@ -1,0 +1,14 @@
+name = "github.com/gogo/protobuf"
+ecosystem = "go"
+type = "deprecated"
+confidence = 1.0
+
+replacement = "google.golang.org/protobuf"
+
+flags = [
+    "deprecated: gogo/protobuf is archived and marked [Deprecated] by maintainers",
+    "deprecated: performance advantages over the official library have been addressed in google.golang.org/protobuf v1.4+",
+    "deprecated: google.golang.org/protobuf is the official actively-maintained replacement",
+]
+
+validated = 2026-03-07
