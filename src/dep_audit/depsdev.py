@@ -86,20 +86,6 @@ def get_dependencies(ecosystem: str, name: str, version: str) -> dict | None:
     return _fetch(url, f"{sys}-{name}-{version}-deps")
 
 
-def get_project(project_key: str) -> dict | None:
-    """Get project info (Scorecard, etc). project_key like 'github.com/user/repo'."""
-    encoded = urllib.parse.quote(project_key, safe="")
-    url = f"{_BASE}/projects/{encoded}"
-    return _fetch(url, f"project-{project_key}")
-
-
-def get_advisory(advisory_key: str) -> dict | None:
-    """Get advisory details."""
-    encoded = urllib.parse.quote(advisory_key, safe="")
-    url = f"{_BASE}/advisories/{encoded}"
-    return _fetch(url, f"advisory-{advisory_key}", ttl=cache.TTL_ADVISORY)
-
-
 def is_deprecated(ecosystem: str, name: str, version: str) -> tuple[bool, str]:
     """Check if a package version is deprecated. Returns (is_deprecated, message)."""
     data = get_version(ecosystem, name, version)
@@ -116,5 +102,3 @@ def is_deprecated(ecosystem: str, name: str, version: str) -> tuple[bool, str]:
                 msg = label or link.get("url", "")
                 break
     return deprecated, msg
-
-

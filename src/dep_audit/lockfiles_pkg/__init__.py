@@ -13,36 +13,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-# Re-export types
+# Re-export public types and parsers
 from dep_audit.lockfiles_pkg._types import Dependency, LockfileResult
 from dep_audit.lockfiles_pkg._util import normalize_package_name
-
-# Re-export Cargo parsers
-from dep_audit.lockfiles_pkg.cargo import (
-    _parse_cargo_lock_content,
-    _parse_cargo_toml_content,
-    parse_cargo,
-)
-
-# Re-export npm parsers
-from dep_audit.lockfiles_pkg.npm import (
-    _parse_package_json_content,
-    _parse_package_lock_json_content,
-    _parse_pnpm_lock_yaml_content,
-    _parse_yarn_lock_content,
-    parse_npm,
-)
-
-# Re-export Python parsers
-from dep_audit.lockfiles_pkg.python import (
-    _parse_poetry_lock_content,
-    _parse_pyproject_deps,
-    _parse_pyproject_deps_content,
-    _parse_requirements_txt,
-    _parse_requirements_txt_content,
-    _parse_uv_lock_content,
-    parse_python,
-)
+from dep_audit.lockfiles_pkg.cargo import parse_cargo
+from dep_audit.lockfiles_pkg.npm import parse_npm
+from dep_audit.lockfiles_pkg.python import parse_python
 
 __all__ = [
     "Dependency",
@@ -53,19 +29,6 @@ __all__ = [
     "parse_cargo",
     "parse_npm",
     "parse_python",
-    # Content parsers (used by tests)
-    "_parse_cargo_lock_content",
-    "_parse_cargo_toml_content",
-    "_parse_package_json_content",
-    "_parse_package_lock_json_content",
-    "_parse_pnpm_lock_yaml_content",
-    "_parse_yarn_lock_content",
-    "_parse_poetry_lock_content",
-    "_parse_pyproject_deps",
-    "_parse_pyproject_deps_content",
-    "_parse_requirements_txt",
-    "_parse_requirements_txt_content",
-    "_parse_uv_lock_content",
 ]
 
 

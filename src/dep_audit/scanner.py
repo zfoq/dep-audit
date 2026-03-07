@@ -142,7 +142,7 @@ def scan_remote(
 
     No source code is downloaded, so usage scanning is skipped.
     """
-    from dep_audit.github import detect_remote_ecosystem, fetch_lockfile_bundle, parse_github_url
+    from dep_audit.github import fetch_all_lockfile_bundles, fetch_lockfile_bundle, parse_github_url
     from dep_audit.lockfiles import parse_from_content
 
     repo = parse_github_url(repo_url)
@@ -154,16 +154,19 @@ def scan_remote(
 
     project_name = f"{repo.owner}/{repo.repo}"
 
-    eco_list = [ecosystem] if ecosystem else detect_remote_ecosystem(repo)
-    if not eco_list:
+    if ecosystem:
+        eco_bundles = {ecosystem: fetch_lockfile_bundle(repo, ecosystem)}
+    else:
+        logger.info("  Fetching lockfiles from %s (%s)...", project_name, repo.ref)
+        eco_bundles = fetch_all_lockfile_bundles(repo)
+
+    if not eco_bundles:
         return []
 
     results: list[ScanResult] = []
-    for eco in eco_list:
+    for eco, bundle in eco_bundles.items():
         tv = target_version or ecosystems.resolve_target_version(eco)
 
-        logger.info("  Fetching lockfiles from %s (%s)...", project_name, repo.ref)
-        bundle = fetch_lockfile_bundle(repo, eco)
         if not bundle:
             logger.warning("  No %s lockfiles found.", eco)
             continue
@@ -326,7 +329,7 @@ def _trace_anchors_no_usage(
     Provides chain information ("pulled in by X") with an UNKNOWN verdict
     since we can't classify without import usage data.
     """
-    from dep_audit.anchors import _find_path_to_direct
+    from dep_audit.anchors import find_path_to_direct
 
     # Build reverse graph: child -> parents
     reverse: dict[str, set[str]] = {}
@@ -340,7 +343,7 @@ def _trace_anchors_no_usage(
             chain = [pkg]
             anchor_name = pkg
         else:
-            chain = _find_path_to_direct(pkg, reverse, direct_deps)
+            chain = find_path_to_direct(pkg, reverse, direct_deps)
             if not chain:
                 continue
             anchor_name = chain[0]

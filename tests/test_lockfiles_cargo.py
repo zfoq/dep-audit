@@ -3,12 +3,8 @@
 from pathlib import Path
 
 from dep_audit.ecosystems import detect_ecosystem
-from dep_audit.lockfiles import (
-    _parse_cargo_lock_content,
-    _parse_cargo_toml_content,
-    parse_cargo,
-    parse_from_content,
-)
+from dep_audit.lockfiles import parse_cargo, parse_from_content
+from dep_audit.lockfiles_pkg.cargo import _parse_cargo_lock_content, _parse_cargo_toml_content
 
 # A minimal Cargo.lock with a root package and two dependencies
 _CARGO_LOCK = """\

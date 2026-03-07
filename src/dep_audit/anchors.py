@@ -46,7 +46,7 @@ def trace_anchors(
             chain = [pkg]
         else:
             # Walk upward to find a direct dep
-            chain = _find_path_to_direct(pkg, reverse, direct_deps)
+            chain = find_path_to_direct(pkg, reverse, direct_deps)
             if not chain:
                 continue
             anchor_name = chain[0]
@@ -61,7 +61,7 @@ def trace_anchors(
     return results
 
 
-def _find_path_to_direct(
+def find_path_to_direct(
     start: str,
     reverse: dict[str, set[str]],
     direct_deps: set[str],
@@ -113,5 +113,3 @@ def classify_anchor(
     if import_count <= 3:
         return "OVERKILL"
     return "JUSTIFIED"
-
-

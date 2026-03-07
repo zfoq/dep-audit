@@ -5,13 +5,12 @@ from __future__ import annotations
 import json
 import textwrap
 
-from dep_audit.lockfiles import (
+from dep_audit.lockfiles import parse_from_content, parse_npm
+from dep_audit.lockfiles_pkg.npm import (
     _parse_package_json_content,
     _parse_package_lock_json_content,
     _parse_pnpm_lock_yaml_content,
     _parse_yarn_lock_content,
-    parse_from_content,
-    parse_npm,
 )
 
 # ---------------------------------------------------------------------------

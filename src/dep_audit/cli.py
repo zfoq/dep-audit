@@ -158,40 +158,31 @@ def _cmd_scan(args: argparse.Namespace) -> int:
 
 def _cmd_check(args: argparse.Namespace) -> int:
     from dep_audit import depsdev
-    from dep_audit.db import get_junk_entry, load_stdlib_map
+    from dep_audit import ecosystems as eco_mod
+    from dep_audit.classify import classify_package
+    from dep_audit.db import load_junk_db, load_stdlib_map
 
     name = args.package
     ecosystem = args.ecosystem
-    entry = get_junk_entry(ecosystem, name)
+    target_version = args.target_version or eco_mod.resolve_target_version(ecosystem)
+
+    junk_db = load_junk_db(ecosystem)
     stdlib_map = load_stdlib_map(ecosystem)
+    c = classify_package(ecosystem, name, "", target_version, True, junk_db, stdlib_map)
 
     print()
-    if entry:
-        etype = entry.get("type", "unknown")
-        conf = entry.get("confidence", 0.0)
-        print(f"  {name} · {etype} · confidence: {conf:.2f}")
+    if c.classification != "ok":
+        print(f"  {name} · {c.classification} · confidence: {c.confidence:.2f}")
         print()
-        summary = entry.get("summary", "")
-        if summary:
-            print(f"  {summary}")
-            print()
-        replacement = entry.get("replacement", "")
-        stdlib_since = entry.get("stdlib_since", "")
-        if replacement:
-            from dep_audit import ecosystems as eco_mod
-
+        if c.replacement:
             eco_label = eco_mod.display_name(ecosystem)
-            since_str = f" (stdlib since {eco_label} {stdlib_since})" if stdlib_since else ""
-            print(f"  Replace with: {replacement}{since_str}")
+            since_str = f" (stdlib since {eco_label} {c.stdlib_since})" if c.stdlib_since else ""
+            print(f"  Replace with: {c.replacement}{since_str}")
             print()
-    elif name in stdlib_map:
-        m = stdlib_map[name]
-        print(f"  {name} · stdlib_backport · confidence: 0.95")
-        print()
-        since = m.get("since", "")
-        module = m.get("module", "")
-        print(f"  Replace with: {module} (stdlib since {since})")
-        print()
+        if c.flags:
+            for flag in c.flags:
+                print(f"  · {flag}")
+            print()
     else:
         print(f"  {name} · ok")
         print()

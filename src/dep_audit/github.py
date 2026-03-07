@@ -28,8 +28,6 @@ class RepoRef:
     ref: str = "HEAD"
 
 
-
-
 def parse_github_url(url_or_shorthand: str) -> RepoRef | None:
     """Parse a GitHub URL or owner/repo shorthand into a RepoRef.
 
@@ -99,20 +97,6 @@ def fetch_file(repo: RepoRef, path: str) -> str | None:
     return None
 
 
-def detect_remote_ecosystem(repo: RepoRef) -> list[str]:
-    """Detect ecosystems by probing for marker files in the repo root."""
-    from dep_audit import ecosystems
-
-    found: list[str] = []
-    for eco in ecosystems.all_ecosystems():
-        for marker in eco.markers:
-            content = fetch_file(repo, marker)
-            if content is not None:
-                found.append(eco.name)
-                break
-    return found
-
-
 def fetch_lockfile_bundle(repo: RepoRef, ecosystem: str) -> dict[str, str]:
     """Fetch lockfiles for an ecosystem. Returns {filename: content} dict.
 
@@ -140,3 +124,19 @@ def fetch_lockfile_bundle(repo: RepoRef, ecosystem: str) -> dict[str, str]:
         return bundle
 
     return {}
+
+
+def fetch_all_lockfile_bundles(repo: RepoRef) -> dict[str, dict[str, str]]:
+    """Detect all ecosystems present by attempting lockfile fetches in priority order.
+
+    Returns {ecosystem_name: bundle} for every ecosystem whose lockfiles are found.
+    Avoids the double-fetch problem of detect_remote_ecosystem + fetch_lockfile_bundle.
+    """
+    from dep_audit import ecosystems
+
+    result: dict[str, dict[str, str]] = {}
+    for eco in ecosystems.all_ecosystems():
+        bundle = fetch_lockfile_bundle(repo, eco.name)
+        if bundle:
+            result[eco.name] = bundle
+    return result

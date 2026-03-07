@@ -51,16 +51,16 @@ def put(namespace: str, key: str, value: dict) -> None:
 
 
 def clear() -> None:
-    """Delete all cached files."""
+    """Delete all cached files and remove empty directories."""
+    import contextlib
+
     d = _cache_dir()
     if not d.exists():
         return
-    for child in d.rglob("*.json"):
-        child.unlink(missing_ok=True)
-    # Walk deepest-first so we can remove empty dirs bottom-up
-    import contextlib
-
+    # Single bottom-up traversal: delete files and rmdir empty dirs
     for child in sorted(d.rglob("*"), reverse=True):
-        if child.is_dir():
+        if child.is_file():
+            child.unlink(missing_ok=True)
+        elif child.is_dir():
             with contextlib.suppress(OSError):
                 child.rmdir()

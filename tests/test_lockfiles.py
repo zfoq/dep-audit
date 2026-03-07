@@ -3,13 +3,12 @@
 from pathlib import Path
 
 from dep_audit.ecosystems import detect_ecosystem
-from dep_audit.lockfiles import (
+from dep_audit.lockfiles import normalize_package_name, parse_from_content
+from dep_audit.lockfiles_pkg.python import (
     _parse_pyproject_deps,
     _parse_pyproject_deps_content,
     _parse_requirements_txt,
     _parse_requirements_txt_content,
-    normalize_package_name,
-    parse_from_content,
 )
 
 
