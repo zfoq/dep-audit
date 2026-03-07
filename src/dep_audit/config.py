@@ -5,7 +5,8 @@ Config is read from the first file found, in priority order:
   2. pyproject.toml           ([tool.dep-audit] section, Python projects)
 
 Supported keys:
-  ignore = ["typing-extensions", "six"]   # suppress specific packages
+  ignore = ["typing-extensions", "six"]   # suppress specific packages (hidden from report)
+  known  = ["quickcheck", "time"]         # show findings but don't fail exit-code ("won't fix")
   target-version = "3.11"                 # override language version
   ecosystem = "python"                    # force ecosystem
   offline = true                          # skip deps.dev API
@@ -29,7 +30,7 @@ from pathlib import Path
 
 logger = logging.getLogger("dep_audit")
 
-_KNOWN_KEYS = frozenset({"ignore", "target-version", "ecosystem", "offline", "exit-code", "min-confidence"})
+_KNOWN_KEYS = frozenset({"ignore", "known", "target-version", "ecosystem", "offline", "exit-code", "min-confidence"})
 
 
 def load_config(project_root: Path) -> dict:

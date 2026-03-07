@@ -1,0 +1,13 @@
+name = "memoffset"
+ecosystem = "cargo"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "core::ptr::offset_of!"
+stdlib_since = "1.77"
+
+flags = [
+    "stdlib_backport: core::ptr::offset_of! stabilised in Rust 1.77",
+]
+
+validated = 2026-03-07

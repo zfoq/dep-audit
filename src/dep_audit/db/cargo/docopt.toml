@@ -1,0 +1,13 @@
+name = "docopt"
+ecosystem = "cargo"
+type = "deprecated"
+confidence = 0.90
+
+replacement = "clap or argh"
+
+flags = [
+    "deprecated: docopt is unmaintained (last release 2019)",
+    "deprecated: clap (feature-rich) or argh (minimal) are maintained replacements",
+]
+
+validated = 2026-03-07

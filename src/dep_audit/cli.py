@@ -69,6 +69,10 @@ def main(argv: list[str] | None = None) -> int:
         "--ignore", metavar="PKG", action="append", default=[],
         help="Ignore a package (can be repeated: --ignore six --ignore pytz)",
     )
+    p_scan.add_argument(
+        "--known", metavar="PKG", action="append", default=[],
+        help="Mark a finding as intentional — still shown, but won't trigger --exit-code",
+    )
 
     # --- check ---
     p_check = sub.add_parser("check", help="Look up a single package")
@@ -129,6 +133,7 @@ def _cmd_scan(args: argparse.Namespace) -> int:
     if is_github_target(args.path):
         cfg: dict = {}
         ignore: set[str] = set(args.ignore)
+        known: set[str] = set(args.known)
         results = scan_remote(
             repo_url=args.path,
             ref=args.ref,
@@ -150,6 +155,8 @@ def _cmd_scan(args: argparse.Namespace) -> int:
         cfg = load_config(project_root)
         # CLI --ignore merges with config ignore list
         ignore = set(cfg.get("ignore", [])) | set(args.ignore)
+        # CLI --known merges with config known list
+        known = set(cfg.get("known", [])) | set(args.known)
 
         # CLI flags override config; config overrides built-in defaults
         target_version = args.target_version or cfg.get("target-version")
@@ -184,9 +191,24 @@ def _cmd_scan(args: argparse.Namespace) -> int:
         print(output)
         if any(
             c.classification != "ok" and c.confidence >= min_confidence
+            and c.name not in known
             for c in result.classifications
         ):
             has_flagged = True
+
+    # Warn about known findings so they stay visible in CI logs
+    if known:
+        known_found = sorted({
+            c.name
+            for result in results
+            for c in result.classifications
+            if c.classification != "ok" and c.name in known
+        })
+        if known_found:
+            logger.info(
+                "  %d known finding(s) suppressed from --exit-code: %s",
+                len(known_found), ", ".join(known_found),
+            )
 
     if args.exit_code and has_flagged:
         return 1

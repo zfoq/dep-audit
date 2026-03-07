@@ -1,0 +1,13 @@
+name = "rustc-serialize"
+ecosystem = "cargo"
+type = "deprecated"
+confidence = 1.0
+
+replacement = "serde"
+
+flags = [
+    "deprecated: rustc-serialize was an early Rust serialization library, unmaintained since 2018",
+    "deprecated: serde is the standard replacement (serde + serde_json / serde_derive)",
+]
+
+validated = 2026-03-07

@@ -159,3 +159,43 @@ def test_scan_sarif_format(tmp_path, capsys):
     assert len(data["runs"]) == 1
     results = data["runs"][0]["results"]
     assert any(r["ruleId"] == "DEP001" for r in results)  # stdlib_backport
+
+
+def test_known_cli_suppresses_exit_code(tmp_path):
+    """--known should prevent --exit-code from firing for that package."""
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3\n")
+    ret = main(["scan", str(tmp_path), "--offline", "--exit-code", "--known", "pytz"])
+    assert ret == 0
+
+
+def test_known_still_shows_in_report(tmp_path, capsys):
+    """--known package should still appear in terminal report output."""
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3\n")
+    ret = main(["scan", str(tmp_path), "--offline", "--known", "pytz"])
+    assert ret == 0
+    captured = capsys.readouterr()
+    assert "pytz" in captured.out
+
+
+def test_known_without_exit_code_returns_zero(tmp_path):
+    """--known alone (no --exit-code) should return 0 regardless."""
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3\n")
+    ret = main(["scan", str(tmp_path), "--offline", "--known", "pytz"])
+    assert ret == 0
+
+
+def test_known_config_key_suppresses_exit_code(tmp_path):
+    """known = [...] in config should suppress exit-code for those packages."""
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3\n")
+    (tmp_path / "pyproject.toml").write_text('[tool.dep-audit]\nknown = ["pytz"]\n')
+    ret = main(["scan", str(tmp_path), "--offline", "--exit-code"])
+    assert ret == 0
+
+
+def test_known_logs_suppression_note(tmp_path, capsys):
+    """When known findings are suppressed, a note should appear in stderr."""
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3\n")
+    ret = main(["scan", str(tmp_path), "--offline", "--exit-code", "--known", "pytz"])
+    assert ret == 0
+    captured = capsys.readouterr()
+    assert "known finding" in captured.err
