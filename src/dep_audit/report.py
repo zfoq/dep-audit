@@ -101,6 +101,13 @@ def terminal_report(result: ScanResult) -> str:
         lines.append("  (none)")
         lines.append("")
 
+    if not is_remote and replaceable:
+        has_stdlib_backport = any(c.classification == "stdlib_backport" for c in replaceable)
+        if has_stdlib_backport:
+            lines.append("  Tip: library authors — set target-version in dep-audit.toml to your")
+            lines.append("  minimum supported version to suppress false positives.")
+            lines.append("")
+
     # Section 3: DEPRECATED
     deprecated = [c for c in flagged if c.classification == "deprecated"]
     lines.append("DEPRECATED:")
@@ -215,6 +222,150 @@ def json_report(result: ScanResult) -> str:
     }
 
     return json.dumps(report, indent=2)
+
+
+def sarif_report(result: ScanResult) -> str:
+    """Generate a SARIF 2.1.0 report for GitHub Code Scanning."""
+    from dep_audit import __version__
+
+    flagged = [c for c in result.classifications if c.classification != "ok"]
+
+    # Rules — one per classification type found in this result
+    rule_ids = {c.classification for c in flagged}
+    rules = [_sarif_rule(rid) for rid in sorted(rule_ids)]
+
+    # Artifact URI for the lockfile (relative path if possible)
+    source_file = result.lockfile_result.source_file or "unknown"
+
+    sarif_results = []
+    for c in flagged:
+        msg = _sarif_message(c)
+        sarif_results.append({
+            "ruleId": _sarif_rule_id(c.classification),
+            "level": _sarif_level(c.classification, c.confidence),
+            "message": {"text": msg},
+            "locations": [{
+                "physicalLocation": {
+                    "artifactLocation": {"uri": source_file, "uriBaseId": "%SRCROOT%"},
+                }
+            }],
+            "properties": {
+                "confidence": c.confidence,
+                "ecosystem": result.ecosystem,
+                "is_direct": c.is_direct,
+            },
+        })
+
+    sarif: dict = {
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "version": "2.1.0",
+        "runs": [{
+            "tool": {
+                "driver": {
+                    "name": "dep-audit",
+                    "version": __version__,
+                    "informationUri": "https://github.com/zfoq/dep-audit",
+                    "rules": rules,
+                }
+            },
+            "results": sarif_results,
+        }],
+    }
+
+    return json.dumps(sarif, indent=2)
+
+
+# SARIF rule metadata -------------------------------------------------------
+
+_SARIF_RULES: dict[str, dict] = {
+    "stdlib_backport": {
+        "id": "DEP001",
+        "name": "StdlibBackport",
+        "shortDescription": "Package replaced by stdlib",
+        "fullDescription": (
+            "This package provides functionality now available in the standard library. "
+            "Remove it and use the stdlib equivalent to reduce your dependency footprint."
+        ),
+        "defaultLevel": "warning",
+        "tags": ["maintainability", "dependencies"],
+    },
+    "zombie_shim": {
+        "id": "DEP002",
+        "name": "ZombieShim",
+        "shortDescription": "Zombie shim — functionality built into the language",
+        "fullDescription": (
+            "This package is a shim for functionality that is now natively supported. "
+            "It should be removed."
+        ),
+        "defaultLevel": "warning",
+        "tags": ["maintainability", "dependencies"],
+    },
+    "deprecated": {
+        "id": "DEP003",
+        "name": "DeprecatedPackage",
+        "shortDescription": "Package is deprecated",
+        "fullDescription": (
+            "The package maintainer has marked this package as deprecated. "
+            "Migrate to the recommended replacement."
+        ),
+        "defaultLevel": "error",
+        "tags": ["correctness", "dependencies"],
+    },
+    "micro_utility": {
+        "id": "DEP004",
+        "name": "MicroUtility",
+        "shortDescription": "Micro-utility replaceable with native code",
+        "fullDescription": (
+            "This package implements a trivial utility that can be replaced "
+            "with a single native language expression."
+        ),
+        "defaultLevel": "note",
+        "tags": ["maintainability", "dependencies"],
+    },
+}
+_SARIF_DEFAULT_RULE = {
+    "id": "DEP000",
+    "name": "UnnecessaryDependency",
+    "shortDescription": "Unnecessary dependency",
+    "fullDescription": "This dependency may be unnecessary.",
+    "defaultLevel": "note",
+    "tags": ["dependencies"],
+}
+
+
+def _sarif_rule_id(classification: str) -> str:
+    return _SARIF_RULES.get(classification, _SARIF_DEFAULT_RULE)["id"]
+
+
+def _sarif_level(classification: str, confidence: float) -> str:
+    base = _SARIF_RULES.get(classification, _SARIF_DEFAULT_RULE)["defaultLevel"]
+    # Downgrade to note if confidence is low
+    if confidence < 0.7:
+        return "note"
+    return base
+
+
+def _sarif_rule(classification: str) -> dict:
+    meta = _SARIF_RULES.get(classification, _SARIF_DEFAULT_RULE)
+    return {
+        "id": meta["id"],
+        "name": meta["name"],
+        "shortDescription": {"text": meta["shortDescription"]},
+        "fullDescription": {"text": meta["fullDescription"]},
+        "defaultConfiguration": {"level": meta["defaultLevel"]},
+        "properties": {"tags": meta.get("tags", [])},
+    }
+
+
+def _sarif_message(c: Classification) -> str:
+    parts = [f"{c.name} ({c.classification})"]
+    if c.replacement:
+        parts.append(f"Replace with: {c.replacement}")
+    if c.stdlib_since:
+        parts.append(f"Available since: {c.stdlib_since}")
+    if c.flags:
+        parts.extend(c.flags)
+    return ". ".join(parts)
 
 
 def _is_unused(c: Classification, usage: dict[str, UsageReport]) -> bool:

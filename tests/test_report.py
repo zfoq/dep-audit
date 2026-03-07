@@ -5,7 +5,7 @@ import json
 from dep_audit.anchors import AnchorResult
 from dep_audit.classify import Classification
 from dep_audit.lockfiles_pkg._types import Dependency, LockfileResult
-from dep_audit.report import json_report, terminal_report
+from dep_audit.report import json_report, sarif_report, terminal_report
 from dep_audit.types import ScanResult
 from dep_audit.usage import FileRef, UsageReport
 
@@ -115,3 +115,80 @@ def test_terminal_report_no_flagged():
     output = terminal_report(result)
     assert "(none)" in output
     assert "0 unnecessary" in output
+
+
+def test_terminal_report_library_hint_present():
+    """The library author hint should appear when stdlib_backport findings exist."""
+    result = _make_scan_result()
+    output = terminal_report(result)
+    assert "target-version" in output
+    assert "library authors" in output
+
+
+def test_terminal_report_library_hint_absent_when_no_backport():
+    """No library author hint when there are no stdlib_backport findings."""
+    classifications = [
+        Classification(
+            name="old-pkg", version="1.0", classification="deprecated",
+            confidence=0.90, is_direct=True, flags=["deprecated: flagged by deps.dev"],
+        ),
+    ]
+    result = _make_scan_result(classifications=classifications, usage={}, anchors={})
+    output = terminal_report(result)
+    assert "library authors" not in output
+
+
+def test_sarif_report_valid_json():
+    result = _make_scan_result()
+    output = sarif_report(result)
+    data = json.loads(output)
+    assert data["version"] == "2.1.0"
+    assert len(data["runs"]) == 1
+    run = data["runs"][0]
+    assert run["tool"]["driver"]["name"] == "dep-audit"
+
+
+def test_sarif_report_results_count():
+    result = _make_scan_result()
+    output = sarif_report(result)
+    data = json.loads(output)
+    results = data["runs"][0]["results"]
+    # Two flagged: pytz (stdlib_backport) and colorama (stdlib_backport)
+    assert len(results) == 2
+
+
+def test_sarif_report_rule_ids():
+    result = _make_scan_result()
+    output = sarif_report(result)
+    data = json.loads(output)
+    results = data["runs"][0]["results"]
+    rule_ids = {r["ruleId"] for r in results}
+    assert "DEP001" in rule_ids  # stdlib_backport
+
+
+def test_sarif_report_no_findings():
+    classifications = [
+        Classification(name="requests", version="2.31.0", classification="ok", is_direct=True),
+    ]
+    result = _make_scan_result(classifications=classifications, usage={}, anchors={}, total_deps=1)
+    output = sarif_report(result)
+    data = json.loads(output)
+    assert data["runs"][0]["results"] == []
+    assert data["runs"][0]["tool"]["driver"]["rules"] == []
+
+
+def test_sarif_level_downgrade_on_low_confidence():
+    """Low-confidence findings should be downgraded to 'note'."""
+    classifications = [
+        Classification(
+            name="clone", version="2.0", classification="stdlib_backport",
+            confidence=0.60, replacement="structuredClone()", is_direct=True,
+        ),
+    ]
+    result = _make_scan_result(
+        classifications=classifications, usage={}, anchors={}, ecosystem="npm",
+    )
+    output = sarif_report(result)
+    data = json.loads(output)
+    results = data["runs"][0]["results"]
+    assert results[0]["level"] == "note"  # confidence 0.60 < 0.7 threshold

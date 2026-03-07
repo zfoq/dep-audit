@@ -14,7 +14,7 @@ from dep_audit import ecosystems
 from dep_audit.anchors import AnchorResult, trace_anchors
 from dep_audit.classify import classify_all
 from dep_audit.lockfiles_pkg import LockfileResult, parse
-from dep_audit.report import json_report, terminal_report
+from dep_audit.report import json_report, sarif_report, terminal_report
 from dep_audit.types import ScanResult
 
 logger = logging.getLogger("dep_audit")
@@ -258,6 +258,8 @@ def format_report(result: ScanResult, fmt: str = "terminal") -> str:
     """Format a ScanResult into the requested output format."""
     if fmt == "json":
         return json_report(result)
+    elif fmt == "sarif":
+        return sarif_report(result)
     else:
         return terminal_report(result)
 

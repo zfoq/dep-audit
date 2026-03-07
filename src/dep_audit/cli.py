@@ -54,12 +54,16 @@ def main(argv: list[str] | None = None) -> int:
     p_scan.add_argument("--ecosystem", help="Force a specific ecosystem")
     p_scan.add_argument("--target-version", help="Language version the project targets")
     p_scan.add_argument("--include-dev", action="store_true", help="Include dev dependencies")
-    p_scan.add_argument("--format", choices=["terminal", "json"], default="terminal")
+    p_scan.add_argument("--format", choices=["terminal", "json", "sarif"], default="terminal")
     p_scan.add_argument("--offline", action="store_true", help="Skip deps.dev API calls")
     p_scan.add_argument("--ref", default="HEAD", help="Git ref for remote repos (branch/tag/commit)")
     p_scan.add_argument(
         "--exit-code", action="store_true",
         help="Exit with code 1 if any flagged dependencies are found (for CI)",
+    )
+    p_scan.add_argument(
+        "--min-confidence", type=float, default=0.0, metavar="FLOAT",
+        help="With --exit-code: only fail on findings >= this confidence (0.0–1.0, default: 0.0)",
     )
     p_scan.add_argument(
         "--ignore", metavar="PKG", action="append", default=[],
@@ -169,11 +173,15 @@ def _cmd_scan(args: argparse.Namespace) -> int:
         # Use effective values for exit-code (remote path uses args directly)
         args.exit_code = exit_code
 
+    min_confidence = getattr(args, "min_confidence", 0.0)
     has_flagged = False
     for result in results:
         output = format_report(result, args.format)
         print(output)
-        if any(c.classification != "ok" for c in result.classifications):
+        if any(
+            c.classification != "ok" and c.confidence >= min_confidence
+            for c in result.classifications
+        ):
             has_flagged = True
 
     if args.exit_code and has_flagged:

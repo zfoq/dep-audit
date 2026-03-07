@@ -116,3 +116,46 @@ def test_scan_inline_ignore_in_requirements(tmp_path, capsys):
     data = json.loads(captured.out.strip())
     classified_names = [c["name"] for c in data.get("classifications", [])]
     assert "pytz" not in classified_names
+
+
+def test_exit_code_with_findings(tmp_path):
+    """--exit-code should return 1 when flagged packages are found."""
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3\n")
+    ret = main(["scan", str(tmp_path), "--offline", "--exit-code"])
+    assert ret == 1
+
+
+def test_exit_code_without_findings(tmp_path):
+    """--exit-code should return 0 when no flagged packages are found."""
+    (tmp_path / "requirements.txt").write_text("requests==2.31.0\n")
+    ret = main(["scan", str(tmp_path), "--offline", "--exit-code"])
+    assert ret == 0
+
+
+def test_min_confidence_filters_low_confidence(tmp_path):
+    """--min-confidence 1.0 should suppress a 0.95-confidence finding."""
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3\n")
+    # pytz has confidence ~0.95 — threshold 1.0 means only perfect-confidence findings trigger exit 1
+    ret = main(["scan", str(tmp_path), "--offline", "--exit-code", "--min-confidence", "1.0"])
+    assert ret == 0
+
+
+def test_min_confidence_passes_high_confidence(tmp_path):
+    """--min-confidence 0.5 should still flag pytz (confidence ~0.95)."""
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3\n")
+    ret = main(["scan", str(tmp_path), "--offline", "--exit-code", "--min-confidence", "0.5"])
+    assert ret == 1
+
+
+def test_scan_sarif_format(tmp_path, capsys):
+    """--format sarif should output valid SARIF 2.1.0 JSON."""
+    (tmp_path / "requirements.txt").write_text("pytz==2023.3\n")
+    ret = main(["scan", str(tmp_path), "--offline", "--format", "sarif"])
+    assert ret == 0
+    captured = capsys.readouterr()
+    import json
+    data = json.loads(captured.out.strip())
+    assert data["version"] == "2.1.0"
+    assert len(data["runs"]) == 1
+    results = data["runs"][0]["results"]
+    assert any(r["ruleId"] == "DEP001" for r in results)  # stdlib_backport
