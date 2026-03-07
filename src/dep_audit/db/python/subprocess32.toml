@@ -1,0 +1,14 @@
+name = "subprocess32"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "subprocess"
+stdlib_since = "3.2"
+
+flags = [
+    "stdlib_backport: subprocess module backport from Python 3.2",
+    "stdlib_backport: only needed for Python 2",
+]
+
+validated = 2026-03-05

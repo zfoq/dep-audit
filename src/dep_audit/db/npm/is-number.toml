@@ -1,0 +1,12 @@
+name = "is-number"
+ecosystem = "npm"
+type = "micro_utility"
+confidence = 0.95
+
+replacement = "typeof x === 'number' && !Number.isNaN(x)"
+
+flags = [
+    "micro_utility: trivial type check replaceable with native JS",
+]
+
+validated = 2026-03-05

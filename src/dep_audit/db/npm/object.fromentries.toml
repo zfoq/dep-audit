@@ -1,0 +1,13 @@
+name = "object.fromentries"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "Object.fromEntries() (ES2019 / Node 12+)"
+stdlib_since = "12.0"
+
+flags = [
+    "stdlib_backport: Object.fromEntries() available since Node 12 / ES2019",
+]
+
+validated = 2026-03-05

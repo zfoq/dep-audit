@@ -1,0 +1,14 @@
+name = "object-assign"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "Object.assign() (ES2015+)"
+stdlib_since = "4.0"
+
+flags = [
+    "stdlib_backport: Object.assign() available since Node 4 / ES2015",
+    "stdlib_backport: no polyfill needed on any supported Node.js version",
+]
+
+validated = 2026-03-05

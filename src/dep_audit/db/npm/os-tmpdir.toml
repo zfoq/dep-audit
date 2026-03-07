@@ -1,0 +1,14 @@
+name = "os-tmpdir"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "os.tmpdir() (Node built-in)"
+stdlib_since = "1.0"
+
+flags = [
+    "stdlib_backport: os.tmpdir() has existed since Node.js inception",
+    "stdlib_backport: zero reason to use a package for this",
+]
+
+validated = 2026-03-05

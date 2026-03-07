@@ -1,0 +1,13 @@
+name = "trollius"
+ecosystem = "python"
+type = "zombie_shim"
+confidence = 1.0
+
+replacement = "asyncio"
+stdlib_since = "3.4"
+
+flags = [
+    "zombie_shim: asyncio backport for Python 2, abandoned",
+]
+
+validated = 2026-03-05

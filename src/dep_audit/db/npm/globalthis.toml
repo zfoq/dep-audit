@@ -1,0 +1,13 @@
+name = "globalthis"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "globalThis (ES2020 / Node 12+)"
+stdlib_since = "12.0"
+
+flags = [
+    "stdlib_backport: globalThis available since Node 12 / ES2020",
+]
+
+validated = 2026-03-05

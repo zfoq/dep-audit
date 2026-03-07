@@ -1,0 +1,13 @@
+name = "scandir"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "os.scandir()"
+stdlib_since = "3.5"
+
+flags = [
+    "stdlib_backport: os.scandir() available since Python 3.5",
+]
+
+validated = 2026-03-05

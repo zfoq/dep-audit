@@ -1,0 +1,14 @@
+name = "has-symbols"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "typeof Symbol === 'function' (ES2015+)"
+stdlib_since = "6.0"
+
+flags = [
+    "stdlib_backport: Symbol has been available since Node 6 / ES2015",
+    "micro_utility: single typeof check",
+]
+
+validated = 2026-03-05

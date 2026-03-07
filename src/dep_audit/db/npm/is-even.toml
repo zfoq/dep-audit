@@ -1,0 +1,13 @@
+name = "is-even"
+ecosystem = "npm"
+type = "micro_utility"
+confidence = 1.0
+
+replacement = "n % 2 === 0"
+
+flags = [
+    "micro_utility: single-line check replaceable with modulo operator",
+    "micro_utility: depends on is-odd (which is also a micro_utility)",
+]
+
+validated = 2026-03-05

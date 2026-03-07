@@ -1,0 +1,13 @@
+name = "object.entries"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "Object.entries() (ES2017 / Node 7+)"
+stdlib_since = "7.0"
+
+flags = [
+    "stdlib_backport: Object.entries() available since Node 7 / ES2017",
+]
+
+validated = 2026-03-05

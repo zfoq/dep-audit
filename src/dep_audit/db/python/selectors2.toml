@@ -1,0 +1,13 @@
+name = "selectors2"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "selectors"
+stdlib_since = "3.4"
+
+flags = [
+    "stdlib_backport: selectors module backport from Python 3.4",
+]
+
+validated = 2026-03-05

@@ -1,0 +1,14 @@
+name = "has"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "Object.hasOwn() (ES2022 / Node 16.9+)"
+stdlib_since = "16.9"
+
+flags = [
+    "stdlib_backport: Object.hasOwn() is the modern replacement",
+    "deprecated: maintainer redirects to hasown package",
+]
+
+validated = 2026-03-05

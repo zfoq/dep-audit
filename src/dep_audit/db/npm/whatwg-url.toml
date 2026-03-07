@@ -1,0 +1,16 @@
+name = "whatwg-url"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "URL (Node 10+)"
+stdlib_since = "10.0"
+
+summary = "WHATWG URL implementation. Node.js has had the URL global since v10."
+
+flags = [
+    "stdlib_backport: URL and URLSearchParams are globals since Node 10",
+    "stdlib_backport: no polyfill needed on any supported Node.js version",
+]
+
+validated = 2026-03-05

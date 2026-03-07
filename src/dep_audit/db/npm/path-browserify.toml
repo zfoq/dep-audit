@@ -1,0 +1,16 @@
+name = "path-browserify"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.85
+
+replacement = "path (Node built-in)"
+stdlib_since = "1.0"
+
+summary = "Polyfill for Node's path module in browsers. Unnecessary in Node.js server code."
+
+flags = [
+    "stdlib_backport: path is a Node.js built-in module",
+    "context: only needed in browser bundles; unnecessary in server-side Node.js",
+]
+
+validated = 2026-03-05

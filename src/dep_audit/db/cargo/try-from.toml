@@ -1,4 +1,4 @@
-name = "try_from"
+name = "try-from"
 ecosystem = "cargo"
 type = "stdlib_backport"
 confidence = 0.95

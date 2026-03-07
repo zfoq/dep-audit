@@ -1,0 +1,12 @@
+name = "is-plain-object"
+ecosystem = "npm"
+type = "micro_utility"
+confidence = 0.85
+
+replacement = "Object.getPrototypeOf(obj) === Object.prototype"
+
+flags = [
+    "micro_utility: small utility replaceable with native prototype check",
+]
+
+validated = 2026-03-05

@@ -1,0 +1,13 @@
+name = "singledispatch"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "functools.singledispatch"
+stdlib_since = "3.4"
+
+flags = [
+    "stdlib_backport: functools.singledispatch available since Python 3.4",
+]
+
+validated = 2026-03-05

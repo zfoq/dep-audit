@@ -1,0 +1,14 @@
+name = "atty"
+ecosystem = "cargo"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "std::io::IsTerminal (Rust 1.70+)"
+stdlib_since = "1.70"
+
+flags = [
+    "stdlib_backport: std::io::IsTerminal available since Rust 1.70",
+    "deprecated: unmaintained, had a RUSTSEC advisory",
+]
+
+validated = 2026-03-05

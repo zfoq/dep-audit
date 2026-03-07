@@ -1,0 +1,16 @@
+name = "punycode"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.90
+
+replacement = "url.domainToASCII() / url.domainToUnicode() (Node 7+)"
+stdlib_since = "7.0"
+
+summary = "Punycode encoding/decoding. Node.js has built-in ICU-based alternatives."
+
+flags = [
+    "stdlib_backport: url.domainToASCII() available since Node 7",
+    "stdlib_backport: the npm 'punycode' module is deprecated in Node core",
+]
+
+validated = 2026-03-05

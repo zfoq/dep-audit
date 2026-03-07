@@ -1,0 +1,13 @@
+name = "term"
+ecosystem = "cargo"
+type = "deprecated"
+confidence = 0.90
+
+replacement = "termcolor or crossterm"
+
+flags = [
+    "deprecated: unmaintained, last release 2020",
+    "deprecated: termcolor and crossterm are maintained alternatives",
+]
+
+validated = 2026-03-05

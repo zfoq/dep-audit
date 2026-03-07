@@ -1,0 +1,16 @@
+name = "string_decoder"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.90
+
+replacement = "TextDecoder (Node 11+)"
+stdlib_since = "11.0"
+
+summary = "Userland copy of Node's string_decoder. TextDecoder is the modern standard."
+
+flags = [
+    "stdlib_backport: TextDecoder (WHATWG Encoding API) available since Node 11",
+    "stdlib_backport: this package mirrors the Node.js internal module",
+]
+
+validated = 2026-03-05

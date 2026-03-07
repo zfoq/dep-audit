@@ -1,4 +1,4 @@
-name = "lazy_static"
+name = "lazy-static"
 ecosystem = "cargo"
 type = "stdlib_backport"
 confidence = 0.95

@@ -1,0 +1,13 @@
+name = "spin"
+ecosystem = "cargo"
+type = "zombie_shim"
+confidence = 0.70
+
+replacement = "std::sync::OnceLock or parking_lot"
+
+flags = [
+    "zombie_shim: spin locks are almost never the right choice on modern OSes",
+    "context: acceptable in no_std environments",
+]
+
+validated = 2026-03-05

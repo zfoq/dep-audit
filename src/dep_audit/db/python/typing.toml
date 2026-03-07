@@ -1,0 +1,14 @@
+name = "typing"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "typing (stdlib)"
+stdlib_since = "3.5"
+
+flags = [
+    "stdlib_backport: typing module is stdlib since Python 3.5",
+    "stdlib_backport: the PyPI package was the Python 2 backport",
+]
+
+validated = 2026-03-05

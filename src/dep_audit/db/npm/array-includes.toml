@@ -1,0 +1,13 @@
+name = "array-includes"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "Array.prototype.includes() (ES2016 / Node 6+)"
+stdlib_since = "6.0"
+
+flags = [
+    "stdlib_backport: Array.prototype.includes() available since Node 6 / ES2016",
+]
+
+validated = 2026-03-05

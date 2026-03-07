@@ -1,4 +1,4 @@
-name = "once_cell"
+name = "once-cell"
 ecosystem = "cargo"
 type = "stdlib_backport"
 confidence = 0.95

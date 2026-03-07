@@ -1,4 +1,4 @@
-name = "num_cpus"
+name = "num-cpus"
 ecosystem = "cargo"
 type = "stdlib_backport"
 confidence = 0.90

@@ -1,0 +1,13 @@
+name = "ipaddress"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "ipaddress (stdlib)"
+stdlib_since = "3.3"
+
+flags = [
+    "stdlib_backport: ipaddress module is stdlib since Python 3.3",
+]
+
+validated = 2026-03-05

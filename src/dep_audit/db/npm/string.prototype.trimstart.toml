@@ -1,0 +1,13 @@
+name = "string.prototype.trimstart"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "String.prototype.trimStart() (ES2019 / Node 10+)"
+stdlib_since = "10.0"
+
+flags = [
+    "stdlib_backport: String.prototype.trimStart() available since Node 10 / ES2019",
+]
+
+validated = 2026-03-05

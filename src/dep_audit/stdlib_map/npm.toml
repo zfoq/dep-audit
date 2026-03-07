@@ -57,3 +57,55 @@ note = "built-in since Node.js inception"
 module = "path"
 since = "1.0"
 note = "Node.js built-in module"
+
+[object-assign]
+module = "Object.assign()"
+since = "4.0"
+
+[array-flatten]
+module = "Array.prototype.flat()"
+since = "11.0"
+
+[array-includes]
+module = "Array.prototype.includes()"
+since = "6.0"
+
+[globalthis]
+module = "globalThis"
+since = "12.0"
+
+[has]
+module = "Object.hasOwn()"
+since = "16.9"
+
+[string.prototype.trimstart]
+module = "String.prototype.trimStart()"
+since = "10.0"
+
+[string.prototype.trimend]
+module = "String.prototype.trimEnd()"
+since = "10.0"
+
+[object.entries]
+module = "Object.entries()"
+since = "7.0"
+
+[object.values]
+module = "Object.values()"
+since = "7.0"
+
+[object.fromentries]
+module = "Object.fromEntries()"
+since = "12.0"
+
+[promise.allsettled]
+module = "Promise.allSettled()"
+since = "12.9"
+
+[array.prototype.flat]
+module = "Array.prototype.flat()"
+since = "11.0"
+
+[array.prototype.flatmap]
+module = "Array.prototype.flatMap()"
+since = "11.0"

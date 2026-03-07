@@ -1,0 +1,13 @@
+name = "array.prototype.flat"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "Array.prototype.flat() (ES2019 / Node 11+)"
+stdlib_since = "11.0"
+
+flags = [
+    "stdlib_backport: Array.prototype.flat() available since Node 11 / ES2019",
+]
+
+validated = 2026-03-05

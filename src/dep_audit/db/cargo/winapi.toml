@@ -1,0 +1,13 @@
+name = "winapi"
+ecosystem = "cargo"
+type = "zombie_shim"
+confidence = 0.85
+
+replacement = "windows-sys (official Microsoft crate)"
+
+flags = [
+    "zombie_shim: windows-sys is the officially maintained Microsoft alternative",
+    "zombie_shim: winapi is community-maintained and less complete",
+]
+
+validated = 2026-03-05

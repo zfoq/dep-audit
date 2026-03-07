@@ -1,0 +1,13 @@
+name = "chainmap"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "collections.ChainMap"
+stdlib_since = "3.3"
+
+flags = [
+    "stdlib_backport: collections.ChainMap available since Python 3.3",
+]
+
+validated = 2026-03-05

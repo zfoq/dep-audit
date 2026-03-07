@@ -1,0 +1,16 @@
+name = "url-parse"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "URL (Node 10+)"
+stdlib_since = "10.0"
+
+summary = "URL parsing library. The WHATWG URL API is built into Node.js."
+
+flags = [
+    "stdlib_backport: URL global available since Node 10",
+    "security: url-parse has had multiple CVEs for parsing inconsistencies",
+]
+
+validated = 2026-03-05

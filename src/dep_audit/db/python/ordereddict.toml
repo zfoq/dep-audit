@@ -1,0 +1,14 @@
+name = "ordereddict"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "dict (ordered since Python 3.7)"
+stdlib_since = "3.7"
+
+flags = [
+    "stdlib_backport: dict maintains insertion order since Python 3.7",
+    "stdlib_backport: collections.OrderedDict also available since 3.1",
+]
+
+validated = 2026-03-05

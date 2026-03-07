@@ -1,0 +1,12 @@
+name = "is-odd"
+ecosystem = "npm"
+type = "micro_utility"
+confidence = 1.0
+
+replacement = "n % 2 !== 0"
+
+flags = [
+    "micro_utility: single-line check replaceable with modulo operator",
+]
+
+validated = 2026-03-05

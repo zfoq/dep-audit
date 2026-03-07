@@ -1,0 +1,13 @@
+name = "promise.allsettled"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 1.0
+
+replacement = "Promise.allSettled() (ES2020 / Node 12.9+)"
+stdlib_since = "12.9"
+
+flags = [
+    "stdlib_backport: Promise.allSettled() available since Node 12.9 / ES2020",
+]
+
+validated = 2026-03-05
