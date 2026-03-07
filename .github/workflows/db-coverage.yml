@@ -1,0 +1,121 @@
+name: DB Coverage
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Every Monday at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ecosystem: python
+            repos: >-
+              fastapi/fastapi
+              django/django
+              pallets/flask
+              psf/requests
+              encode/httpx
+              tiangolo/sqlmodel
+              pydantic/pydantic
+              celery/celery
+              ansible/ansible
+              home-assistant/core
+          - ecosystem: npm
+            repos: >-
+              expressjs/express
+              nestjs/nest
+              vercel/next.js
+              nuxt/nuxt
+              sveltejs/svelte
+              axios/axios
+              lodash/lodash
+              moment/moment
+          - ecosystem: cargo
+            repos: >-
+              tokio-rs/tokio
+              serde-rs/serde
+              actix/actix-web
+              hyperium/hyper
+              clap-rs/clap
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - run: uv sync
+
+      - name: Scan ${{ matrix.ecosystem }} repos
+        run: |
+          out="${{ matrix.ecosystem }}.toml"
+          for repo in ${{ matrix.repos }}; do
+            echo "Scanning $repo..."
+            uv run dep-audit db export --discovered "$repo" \
+              --ecosystem "${{ matrix.ecosystem }}" --offline 2>/dev/null >> "$out" || true
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stubs-${{ matrix.ecosystem }}
+          path: ${{ matrix.ecosystem }}.toml
+          if-no-files-found: ignore
+
+  commit:
+    runs-on: ubuntu-latest
+    needs: discover
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stubs-*
+          merge-multiple: true
+          path: /tmp/stubs
+
+      - name: Write new stub files
+        id: write
+        run: |
+          python3 scripts/write_stubs.py /tmp/stubs
+          new=$(git status --porcelain src/dep_audit/db/ | wc -l | tr -d ' ')
+          echo "new_count=$new" >> "$GITHUB_OUTPUT"
+
+      - name: Push branch and open PR
+        if: steps.write.outputs.new_count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -B bot/db-coverage
+          git add src/dep_audit/db/
+          git commit -m "chore(db): add ${{ steps.write.outputs.new_count }} missing DB stubs from weekly scan
+
+          Auto-discovered by db-coverage workflow. Each stub needs type,
+          replacement, and reason filled in before the PR is merged.
+
+          Co-Authored-By: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          git push --force origin bot/db-coverage
+
+          title="chore(db): add ${{ steps.write.outputs.new_count }} missing DB stubs"
+          existing=$(gh pr list --head bot/db-coverage --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --title "$title"
+            echo "Updated PR #$existing"
+          else
+            gh pr create \
+              --head bot/db-coverage \
+              --base main \
+              --title "$title" \
+              --body-file .github/db-coverage-pr.md
+          fi
