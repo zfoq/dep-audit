@@ -1,0 +1,15 @@
+name = "glob"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.70
+
+replacement = "fs.glob() / fs.promises.glob()"
+stdlib_since = "22.0"
+
+flags = [
+    "stdlib_backport: fs.glob was added in Node 22.0 with full glob pattern support",
+    "stdlib_backport: fs.promises.glob provides the async equivalent",
+    "note: fs.glob is relatively new — verify your minimum Node target before removing glob",
+]
+
+validated = 2026-03-08

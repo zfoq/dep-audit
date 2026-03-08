@@ -1,0 +1,15 @@
+name = "event-target-shim"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.85
+
+replacement = "EventTarget (global)"
+stdlib_since = "15.4"
+
+flags = [
+    "stdlib_backport: EventTarget became a global in Node 15.4",
+    "stdlib_backport: the global EventTarget supports addEventListener, removeEventListener, dispatchEvent",
+    "stdlib_backport: event-target-shim was needed before Node provided EventTarget natively",
+]
+
+validated = 2026-03-08

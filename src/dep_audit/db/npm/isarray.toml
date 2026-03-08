@@ -1,0 +1,13 @@
+name = "isarray"
+ecosystem = "npm"
+type = "micro_utility"
+confidence = 1.0
+
+replacement = "Array.isArray()"
+
+flags = [
+    "micro_utility: Array.isArray() is available in all supported Node and browser versions",
+    "micro_utility: isarray is a single-line function: return Array.isArray(arg)",
+]
+
+validated = 2026-03-08

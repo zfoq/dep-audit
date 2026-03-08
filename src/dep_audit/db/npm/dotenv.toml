@@ -1,0 +1,15 @@
+name = "dotenv"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.60
+
+replacement = "process.loadEnvFile() or node --env-file=.env"
+stdlib_since = "20.12"
+
+flags = [
+    "stdlib_backport: process.loadEnvFile() was added in Node 20.12",
+    "stdlib_backport: node --env-file=.env flag loads .env files before execution",
+    "note: dotenv supports variable expansion, multiline values, and .env.local overrides — verify your usage",
+]
+
+validated = 2026-03-08
