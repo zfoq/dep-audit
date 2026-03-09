@@ -1,0 +1,15 @@
+name = "safe-buffer"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.95
+
+replacement = "Buffer.from() / Buffer.alloc() / Buffer.allocUnsafe()"
+stdlib_since = "4.5"
+
+flags = [
+    "stdlib_backport: Buffer.from and Buffer.alloc were added in Node 4.5.0",
+    "stdlib_backport: safe-buffer was a polyfill for the safe Buffer API on older Node versions",
+    "stdlib_backport: the unsafe new Buffer() constructor has been deprecated since Node 6",
+]
+
+validated = 2026-03-08

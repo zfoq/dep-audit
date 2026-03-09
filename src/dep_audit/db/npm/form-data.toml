@@ -1,0 +1,15 @@
+name = "form-data"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.75
+
+replacement = "FormData (global)"
+stdlib_since = "18.0"
+
+flags = [
+    "stdlib_backport: FormData became a global in Node 18.0 as part of the fetch API",
+    "stdlib_backport: the native FormData supports .append(), .set(), .get(), .entries()",
+    "note: form-data has extra features like stream support; verify your usage before removing",
+]
+
+validated = 2026-03-08

@@ -1,0 +1,15 @@
+name = "bluebird"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.80
+
+replacement = "native Promise + Promise.allSettled / Promise.any"
+stdlib_since = "4.0"
+
+flags = [
+    "stdlib_backport: native Promises have been available since Node 4.0 (ES2015)",
+    "stdlib_backport: Promise.allSettled (Node 12.9) and Promise.any (Node 15) cover most bluebird extras",
+    "note: bluebird's cancellation and .map with concurrency have no direct stdlib equivalent",
+]
+
+validated = 2026-03-08

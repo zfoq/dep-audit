@@ -1,0 +1,15 @@
+name = "co"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.90
+
+replacement = "async/await (ES2017)"
+stdlib_since = "7.6"
+
+flags = [
+    "stdlib_backport: async/await was added in Node 7.6 (V8 5.5) and is native ES2017",
+    "stdlib_backport: co is a generator-based control flow library that predates async/await",
+    "stdlib_backport: async/await is a direct replacement for co(function* () { yield ... })",
+]
+
+validated = 2026-03-08

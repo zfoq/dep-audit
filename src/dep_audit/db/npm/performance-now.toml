@@ -1,0 +1,15 @@
+name = "performance-now"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.90
+
+replacement = "perf_hooks.performance.now() or performance.now()"
+stdlib_since = "8.5"
+
+flags = [
+    "stdlib_backport: perf_hooks.performance.now() was added in Node 8.5",
+    "stdlib_backport: performance is a global in Node 16+ — no import needed",
+    "stdlib_backport: performance-now is a polyfill that is no longer necessary",
+]
+
+validated = 2026-03-08

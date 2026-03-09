@@ -1,0 +1,15 @@
+name = "mkdirp"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.90
+
+replacement = "fs.mkdir(path, { recursive: true })"
+stdlib_since = "10.12"
+
+flags = [
+    "stdlib_backport: fs.mkdir with recursive option was added in Node 10.12",
+    "stdlib_backport: fs.promises.mkdir provides the async equivalent",
+    "stdlib_backport: drop-in replacement for the common mkdirp(dir, cb) pattern",
+]
+
+validated = 2026-03-08

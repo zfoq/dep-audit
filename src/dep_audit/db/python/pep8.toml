@@ -1,0 +1,14 @@
+name = "pep8"
+ecosystem = "python"
+type = "deprecated"
+confidence = 1.0
+
+replacement = "pycodestyle"
+
+flags = [
+    "deprecated: pep8 was renamed to pycodestyle in 2016 (GitHub issue #466)",
+    "deprecated: the pep8 PyPI package is unmaintained and redirects users to pycodestyle",
+    "deprecated: pycodestyle is actively maintained with the same functionality",
+]
+
+validated = 2026-03-08

@@ -1,0 +1,13 @@
+name = "is-buffer"
+ecosystem = "npm"
+type = "micro_utility"
+confidence = 1.0
+
+replacement = "Buffer.isBuffer()"
+
+flags = [
+    "micro_utility: Buffer.isBuffer() has been available since the earliest Node versions",
+    "micro_utility: is-buffer is a single-expression function: return Buffer.isBuffer(obj)",
+]
+
+validated = 2026-03-08

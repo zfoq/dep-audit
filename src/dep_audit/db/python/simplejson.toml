@@ -1,0 +1,15 @@
+name = "simplejson"
+ecosystem = "python"
+type = "stdlib_backport"
+confidence = 0.70
+
+replacement = "json (stdlib since Python 2.6)"
+stdlib_since = "2.6"
+
+flags = [
+    "stdlib_backport: the stdlib json module is derived from simplejson (same author, Bob Ippolito)",
+    "stdlib_backport: simplejson occasionally gets features before they land in the stdlib json module",
+    "note: simplejson may still be useful if you need its C-accelerated encoder on older CPython or specific options like use_decimal",
+]
+
+validated = 2026-03-08

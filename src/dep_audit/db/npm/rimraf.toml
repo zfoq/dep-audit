@@ -1,0 +1,15 @@
+name = "rimraf"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.85
+
+replacement = "fs.rm(path, { recursive: true, force: true })"
+stdlib_since = "14.14"
+
+flags = [
+    "stdlib_backport: fs.rm with recursive option was added in Node 14.14",
+    "stdlib_backport: fs.promises.rm provides the async equivalent",
+    "stdlib_backport: rimraf v4+ is itself a thin wrapper around fs.rm",
+]
+
+validated = 2026-03-08

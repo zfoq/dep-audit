@@ -1,0 +1,14 @@
+name = "pep257"
+ecosystem = "python"
+type = "deprecated"
+confidence = 1.0
+
+replacement = "pydocstyle"
+
+flags = [
+    "deprecated: pep257 was renamed to pydocstyle in 2016",
+    "deprecated: the pep257 PyPI package is unmaintained and redirects users to pydocstyle",
+    "deprecated: pydocstyle is actively maintained with the same functionality",
+]
+
+validated = 2026-03-08

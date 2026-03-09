@@ -1,0 +1,15 @@
+name = "pify"
+ecosystem = "npm"
+type = "stdlib_backport"
+confidence = 0.90
+
+replacement = "util.promisify()"
+stdlib_since = "8.0"
+
+flags = [
+    "stdlib_backport: util.promisify was added in Node 8.0",
+    "stdlib_backport: pify converts callback-style functions to promises — util.promisify does the same",
+    "stdlib_backport: util.promisify also supports the custom symbol for advanced use cases",
+]
+
+validated = 2026-03-08
